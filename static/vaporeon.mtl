@@ -1,0 +1,46 @@
+# Blender MTL File: 'None'
+# Material Count: 4
+
+newmtl mat1
+Ns 9.803922
+Ka 0.500000 0.500000 0.500000
+Kd 0.900000 0.900000 0.900000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\134 - Vaporeon\Textures\ShowersDh.tga
+
+newmtl mat2
+Ns 9.803922
+Ka 0.500000 0.500000 0.500000
+Kd 0.900000 0.900000 0.900000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\134 - Vaporeon\Textures\ShowersEyeDh.tga
+
+newmtl mat3
+Ns 9.803922
+Ka 0.500000 0.500000 0.500000
+Kd 0.900000 0.900000 0.900000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\134 - Vaporeon\Textures\ShowersFilletDh.tga
+
+newmtl mat4
+Ns 9.803922
+Ka 0.500000 0.500000 0.500000
+Kd 0.900000 0.900000 0.900000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\134 - Vaporeon\Textures\ShowersMouthDh.tga

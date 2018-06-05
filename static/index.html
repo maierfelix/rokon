@@ -1,0 +1,122 @@
+<title>Sunrise Engine</title>
+
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
+  .cursor {
+    position: absolute;
+    left: calc(50% - 4px);
+    top: calc(50% - 4px);
+    width: 8px;
+    height: 8px;
+    background: black;
+  }
+  .debug-container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    padding: 6px;
+    color: darkgrey;
+  }
+  .debug-item {
+    position: relative;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-family: px Helvetica,Arial,sans-serif;
+    padding: 2px;
+    font-weight: 100;
+  }
+</style>
+
+<div class="debug-container">
+  <div id="debug_objects" class="debug-item"></div>
+  <div id="debug_instanced_objects" class="debug-item"></div>
+  <div id="debug_batch_updates" class="debug-item"></div>
+  <div id="debug_delta" class="debug-item"></div>
+  <div id="debug_draw_calls" class="debug-item"></div>
+  <div id="debug_fbo_switches" class="debug-item"></div>
+  <div id="debug_texture_switches" class="debug-item"></div>
+  <div id="debug_program_switches" class="debug-item"></div>
+  <div id="debug_total_vertices" class="debug-item"></div>
+  <div id="debug_occlusion_culled" class="debug-item"></div>
+  <div id="debug_wireframe" class="debug-item"></div>
+  <div id="debug_boundings" class="debug-item"></div>
+  <div id="debug_FXAA" class="debug-item"></div>
+  <div id="debug_normals" class="debug-item"></div>
+</div>
+
+<div class="cursor"></div>
+<canvas id="canvas"></canvas>
+
+<script>
+(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='./stats.min.js';document.head.appendChild(script);})()
+</script>
+
+<script type="text/javascript" src="./reload.js"></script>
+<script type="text/javascript" src="./gl-matrix-min.js"></script>
+<!-- gl-matrix quat.toRotationMatrix polyfill -->
+<script>
+/**
+ * Calculates the rotation matrix of a quat
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {quat} a quat to calculate from
+ * @returns {quat} out
+ */
+quat.toRotationMatrix = function(out, a) {
+  let x = a[0], y = a[1], z = a[2], w = a[3];
+  let xy = x * y;
+  let xz = x * z;
+  let xw = x * w;
+  let yz = y * z;
+  let yw = y * w;
+  let zw = z * w;
+  let xSquared = x * x;
+  let ySquared = y * y;
+  let zSquared = z * z;
+  out[0] = 1.0 - 2.0 * (ySquared + zSquared);
+  out[1] = 2.0 * (xy - zw);
+  out[2] = 2.0 * (xz + yw);
+  out[3] = 0.0;
+  out[4] = 2.0 * (xy + zw);
+  out[5] = 1.0 - 2.0 * (xSquared + zSquared);
+  out[6] = 2.0 * (yz - xw);
+  out[7] = 0.0;
+  out[8] = 2.0 * (xz - yw);
+  out[9] = 2.0 * (yz + xw);
+  out[10] = 1.0 - 2.0 * (xSquared + ySquared);
+  out[11] = 0.0;
+  out[12] = 0.0;
+  out[13] = 0.0;
+  out[14] = 0.0;
+  out[15] = 1.0;
+  return out;
+};
+quat.multiplyVec3 = function (out, quat, vec) {
+
+  let x = vec[0], y = vec[1], z = vec[2];
+  let qx = quat[0], qy = quat[1], qz = quat[2], qw = quat[3];
+
+  // calculate quat * vec
+  let ix = qw * x + qy * z - qz * y;
+  let iy = qw * y + qz * x - qx * z;
+  let iz = qw * z + qx * y - qy * x;
+  let iw = -qx * x - qy * y - qz * z;
+
+  // calculate result * inverse quat
+  out[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+  out[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+  out[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+
+  return out;
+};
+</script>
+
+<!--
+<script src="https://threejs.org/build/three.min.js" type="text/javascript"></script>
+<script src="https://threejs.org/examples/js/loaders/ColladaLoader.js" type="text/javascript"></script>
+-->
+
+<script type="text/javascript" src="../dist/bundle-browser.js"></script>

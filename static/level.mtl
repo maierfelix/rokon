@@ -1,0 +1,180 @@
+# Blender MTL File: 'None'
+# Material Count: 16
+
+newmtl 01_-_Default
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Bump -bm 0.042005 E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\nm .jpg
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\texture hall.jpg
+
+newmtl 02_-_Default
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.153726 0.153726 0.153726
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+
+newmtl 02_-_Defaultmo
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uv  box amomo.jpg
+
+newmtl 03_-_Default
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Bump -bm 0.042005 E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uv door 1 B.jpg
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uv door 1 B.jpg
+
+newmtl 03_-_Defaultxcv
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\Abstract-Space-space-33308889-1920-1200.jpg
+
+newmtl Material_#26
+Ns 84.313725
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\door uv .jpg
+
+newmtl Material_#27
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Bump -bm 0.042005 E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\usangar 2.jpg
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\usangar 2.jpg
+
+newmtl Material_#28
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.144000 0.144000 0.144000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Bump -bm 0.042005 E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\sangar uv.jpg
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\sangar uv.jpg
+
+newmtl Material_#29
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470400 0.470400 0.470400
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+
+newmtl Material_#30
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uv  box amomo.jpg
+
+newmtl Material_#31
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uv panel texture test.jpg
+
+newmtl Material_#32
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uvmain panedl.jpg
+
+newmtl Material_#33
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\uv wall.jpg
+
+newmtl adaptor
+Ns 98.039216
+Ka 1.000000 1.000000 1.000000
+Kd 0.037647 0.037647 0.037647
+Ks 0.126000 0.126000 0.126000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd Map #1
+
+newmtl dfhg
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\teure for bright window S@.jpg
+
+newmtl sdsdsds
+Ns 19.607843
+Ka 1.000000 1.000000 1.000000
+Kd 0.470588 0.470588 0.470588
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd E:\\collage\\Term 4\\Mudlur\\Level 1.fbm\\huv  box.jpg

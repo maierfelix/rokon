@@ -1,0 +1,24 @@
+# Blender MTL File: 'None'
+# Material Count: 2
+
+newmtl assets_textures_Pii_FOKKO_body
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.250000 0.250000 0.250000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\\Users\\User\\Downloads\\3DS - Pokemon Rumble World - 653 Fennekin\\Fennekin\\Pii_FOKKO_body.png
+
+newmtl assets_textures_Pii_FOKKO_eye
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.250000 0.250000 0.250000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\\Users\\User\\Downloads\\3DS - Pokemon Rumble World - 653 Fennekin\\Fennekin\\Pii_FOKKO_eye.png

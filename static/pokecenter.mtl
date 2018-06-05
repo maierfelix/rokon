@@ -1,0 +1,54 @@
+# Blender MTL File: 'None'
+# Material Count: 4
+
+newmtl gs_pc_a
+Ns 96.078431
+Ka 0.972549 0.972549 0.972549
+Kd 0.784314 0.784314 0.784314
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\Pokémon Center\gs_pc_a.png
+map_Ka C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\gs_pc_a.png
+map_d C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\gs_pc_a.png
+
+newmtl gs_pc_a_
+Ns 96.078431
+Ka 0.972549 0.972549 0.972549
+Kd 0.784314 0.784314 0.784314
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\Pokémon Center\gs_pc_a_.png
+map_Ka C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\gs_pc_a_.png
+map_d C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\gs_pc_a_.png
+
+newmtl gs_pc_b
+Ns 96.078431
+Ka 0.972549 0.972549 0.972549
+Kd 0.784314 0.784314 0.784314
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\Pokémon Center\gs_pc_b.png
+map_Ka C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\gs_pc_b.png
+map_d C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\gs_pc_b.png
+
+newmtl h_kage
+Ns 96.078431
+Ka 0.972549 0.972549 0.972549
+Kd 0.784314 0.784314 0.784314
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.290323
+illum 2
+map_Kd C:\Users\User\Downloads\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\Pokémon Center\h_kage.png
+map_Ka C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\h_kage.png
+map_d C:\\Users\\User\\Downloads\\DS DSi - Pokemon HeartGold SoulSilver - Pokemon Center\\Pokémon Center\\h_kage.png

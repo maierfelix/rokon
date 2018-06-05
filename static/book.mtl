@@ -1,0 +1,15 @@
+# Blender MTL File: 'DH_book_00.blend'
+# Material Count: 1
+
+newmtl book
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\User\Downloads\dh_book_00\textures\book_tex.png
+map_Bump -bm 0.500000 C:\\Users\\User\\Downloads\\dh_book_00\\textures\\book_normal.png
+map_Ks C:\\Users\\User\\Downloads\\dh_book_00\\textures\\book_spec.png

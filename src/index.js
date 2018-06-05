@@ -1,1 +1,0 @@
-import WebGLRenderer from "./renderer/";
