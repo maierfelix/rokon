@@ -1,6 +1,6 @@
 # rokon-engine
 
-This is a hybrid JavaScript/WebAssembly 3D engine using WebGL2.
+This is a hybrid JavaScript/WebAssembly 3D engine using WebGL2. It's using [glmw](https://github.com/maierfelix/glmw), a C port of gl-matrix.
 
 [Demo](https://maierfelix.github.io/rokon-engine/static/index.html)
 
