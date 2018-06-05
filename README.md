@@ -2,6 +2,8 @@
 
 This is a hybrid JavaScript/WebAssembly 3D engine using WebGL2.
 
+[Demo](https://maierfelix.github.io/rokon-engine/static/index.html)
+
 Features:
  - Deferred shading
  - PBR
