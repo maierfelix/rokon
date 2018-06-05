@@ -7285,19 +7285,6 @@ function renderObject(object) {
   this.drawElements(gl.TRIANGLES, object.data.indices.length, gl.UNSIGNED_SHORT, 0);
   if (object.culling === false) gl.enable(gl.CULL_FACE);
   if (this.debug.boundings) this.renderBoundingBox(object);
-  // reset bools
-  {
-    gl.uniform1f(variables.uIsLightSource, 0);
-    gl.uniform1f(variables.uHasNormalMap, 0);
-    gl.uniform1f(variables.uHasShadowMap, 0);
-    gl.uniform1f(variables.uHasSpecularMap, 0);
-    gl.uniform1f(variables.uHasEmissiveMap, 0);
-    gl.uniform1f(variables.uHasSpecularLighting, 0);
-    gl.uniform1f(variables.uHasEnvironmentMap, 0);
-    gl.uniform1f(variables.uHasMetalnessMap, 0);
-    gl.uniform1f(variables.uHasRoughnessMap, 0);
-    gl.uniform1f(variables.uHasAmbientOcclusionMap, 0);
-  }
 }
 
 
@@ -7805,7 +7792,7 @@ class WebGLRenderer {
     this.programs = {};
     this.extensions = {};
     this.debug = {
-      FXAA: true,
+      FXAA: false,
       normals: false,
       boundings: false,
       wireframe: false
