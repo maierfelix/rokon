@@ -2,11 +2,11 @@
 
 This is a hybrid JavaScript/WebAssembly 3D engine using WebGL2. It's using [glmw](https://github.com/maierfelix/glmw), a C port of gl-matrix.
 
-[Demo](https://maierfelix.github.io/rokon-engine/static/index.html)
+[Demo](https://maierfelix.github.io/rokon/static/index.html)
 
-<img src="https://github.com/maierfelix/rokon-engine/blob/master/screenshots/1.gif?raw=true" width="50%">
-<img src="https://github.com/maierfelix/rokon-engine/blob/master/screenshots/2.gif?raw=true" width="50%">
-<img src="https://github.com/maierfelix/rokon-engine/blob/master/screenshots/3.gif?raw=true" width="50%">
+<img src="https://github.com/maierfelix/rokon/blob/master/screenshots/1.gif?raw=true" width="50%">
+<img src="https://github.com/maierfelix/rokon/blob/master/screenshots/2.gif?raw=true" width="50%">
+<img src="https://github.com/maierfelix/rokon/blob/master/screenshots/3.gif?raw=true" width="50%">
 
 Features:
  - Deferred shading
