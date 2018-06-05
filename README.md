@@ -9,17 +9,17 @@ Features:
  - Point + directional lighting
  - Instanced rendering
  - Environment mapping
+ - Shadow mapping (WIP)
  - Cubemaps
  - Skyboxes
  - Ray casting (e.g. for mouse picking)
  - Bounding boxes
  - Plane realtime reflections + refractions
  - Billboarding
- - Shadows
  - Multiple render target support
  - Frustum culling
  - Occlusion culling
- - Unified tangent/Bitangent calclations
+ - Unified tangent/bitangent calculations
  - All direction fog
  - God rays
  - Blur/Bloom filtering
