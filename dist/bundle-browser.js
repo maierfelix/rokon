@@ -9675,6 +9675,26 @@ class Stage {
         objects.push(object);
       });
     }*/
+    {
+      renderer.createObjectFile().fromPath("abra.obj").then(base => {
+        let texture1 = renderer.createTexture().fromImagePath("abra.png");
+        base.useTexture(texture1);
+        for (let ii = 0; ii < 1; ++ii) {
+          let obj = renderer.createObject(Cube, { inherit: base });
+          obj.translate.set(100, 0, 150);
+          obj.rotate.x = 180;
+          obj.scale.set(4);
+          obj.specularLighting = true;
+          window.abra = obj;
+          objects.push(obj);
+          setTimeout(() => {
+            obj.translate.y = terrain.getHeightAt(
+              obj.translate.x, obj.translate.y, obj.translate.z
+            );
+          });
+        }
+      });
+    }
     // collada file test
     /*{
       renderer.createColladaFile().fromPath("model_blender278.dae").then(object => {
@@ -9843,25 +9863,6 @@ class Stage {
         }, 1e3);
       });
     }*/
-    {
-      renderer.createObjectFile().fromPath("alien.obj").then(obj => {
-        obj.useTexture(renderer.createTexture().fromImagePath("alien-diffuse.jpg"));
-        obj.useNormalMap(renderer.createTexture().fromImagePath("alien-normal.jpg"));
-        obj.useMetalnessMap(renderer.createTexture().fromImagePath("alien-metalness.jpg"));
-        obj.useRoughnessMap(renderer.createTexture().fromImagePath("alien-roughness.jpg"));
-        obj.useAmbientOcclusionMap(renderer.createTexture().fromImagePath("alien-ao.jpg"));
-        obj.useEmissiveMap(renderer.createTexture().fromImagePath("alien-emissive.jpg"));
-        obj.translate.set(0, -80, 0);
-        obj.scale.set(16);
-        obj.rotate.x = 180;
-        obj.specularLighting = true;
-        objects.push(obj);
-        setTimeout(() => {
-          //obj.environmentMapping = true;
-        }, 1e3);
-        window.alien = obj;
-      });
-    }
     /*setTimeout(() => {
       renderer.createObjectFile().fromPath("tree_stem.obj").then(obj => {
         obj.useTexture(renderer.createTexture().fromImagePath("tree_stem.jpg"));
@@ -10667,6 +10668,15 @@ setInterval(() => {
     debug_batch_updates.innerHTML = `Batch buffer refills: ${batch.updates}`;
   }
 }, 250);
+
+setInterval(() => {
+  objects.map(object => {
+    if (!object.light) return;
+    //object.translate.y += Math.sin(renderer.frames * 0.00125) * 0.125;
+    object.translate.x += Math.cos(renderer.frames * 0.00120) * 0.5;
+    object.translate.z += Math.sin(renderer.frames * 0.00120) * 0.5;
+  });
+});
 
 window.keys = {};
 let isKeyPressed = (key) => keys[key] || keys[key.toLowerCase()] || keys[key.toUpperCase()];
