@@ -278,7 +278,7 @@ FrameBuffer.prototype.createTexture = function(opts) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, wrap.r);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texImage2D(gl.TEXTURE_2D, 0, opts.format, this.width, this.height, 0, gl.DEPTH_COMPONENT, opts.size, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, opts.format, this.width, this.height, 0, gl.DEPTH_COMPONENT, opts.size || gl.FLOAT, null);
     } else {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap.s);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap.t);

@@ -21,6 +21,12 @@ export function renderPlane(object) {
     gl.vertexAttribPointer(variables.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(variables.aVertexPosition);
   }
+  // how to pull uvs
+  if (object.data.uvs.length) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.uvs);
+    gl.vertexAttribPointer(variables.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(variables.aTextureCoord);
+  }
   // which indices to use
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
   // send uniforms
@@ -33,15 +39,20 @@ export function renderPlane(object) {
   }
   // water related
   if (object instanceof Water) {
-    let dudvTexture = object.dudvTexture;
-    let depthTexture = object.depthTexture;
-    let normalTexture = object.normalTexture;
-    let reflectionTexture = object.reflectionTexture;
-    let refractionTexture = object.refractionTexture;
+    let {
+      dudvTexture,
+      depthTexture,
+      normalTexture,
+      reflectionTexture,
+      refractionTexture,
+      refractionDepthTexture
+    } = object;
     this.useTexture(reflectionTexture, variables.uReflectionTexture, 0);
     this.useTexture(refractionTexture, variables.uRefractionTexture, 1);
+    this.useTexture(refractionDepthTexture, variables.uRefractionDepthTexture, 1);
     this.useTexture(dudvTexture, variables.uDudvTexture, 2);
     this.useTexture(normalTexture, variables.uNormalTexture, 3);
+    this.useTexture(object.animeTexture1, variables.uAnimeTexture1, 4);
   } else {
     this.useTexture(object.texture, variables.uSampler, 0);
   }

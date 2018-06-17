@@ -53,6 +53,9 @@ export function renderObject(object) {
   // how to pull vertices
   {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
+    /*if (!program.isAttributeBufferEnabled(variables.aVertexPosition)) {
+      program.enableAttributeBuffer(variables.aVertexPosition, buffers.vertices, 3);
+    }*/
     gl.vertexAttribPointer(variables.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(variables.aVertexPosition);
   }
@@ -153,17 +156,4 @@ export function renderObject(object) {
   this.drawElements(gl.TRIANGLES, object.data.indices.length, gl.UNSIGNED_SHORT, 0);
   if (object.culling === false) gl.enable(gl.CULL_FACE);
   if (this.debug.boundings) this.renderBoundingBox(object);
-  // reset bools
-  {
-    gl.uniform1f(variables.uIsLightSource, 0);
-    gl.uniform1f(variables.uHasNormalMap, 0);
-    gl.uniform1f(variables.uHasShadowMap, 0);
-    gl.uniform1f(variables.uHasSpecularMap, 0);
-    gl.uniform1f(variables.uHasEmissiveMap, 0);
-    gl.uniform1f(variables.uHasSpecularLighting, 0);
-    gl.uniform1f(variables.uHasEnvironmentMap, 0);
-    gl.uniform1f(variables.uHasMetalnessMap, 0);
-    gl.uniform1f(variables.uHasRoughnessMap, 0);
-    gl.uniform1f(variables.uHasAmbientOcclusionMap, 0);
-  }
 };

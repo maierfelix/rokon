@@ -62,13 +62,13 @@ export default class WebGLRenderer {
     this.programs = {};
     this.extensions = {};
     this.debug = {
-      FXAA: true,
+      FXAA: false,
       normals: false,
       boundings: false,
       wireframe: false
     };
     this.gl = this.canvas.getContext("webgl2", {
-      alpha: false,
+      alpha: true,
       stencil: false,
       antialias: false,
       premultipliedAlpha: false,
@@ -90,10 +90,12 @@ export default class WebGLRenderer {
     this.viewMatrix = mat4.create();
     this.modelMatrix = mat4.create();
     this.normalMatrix = mat4.create();
+    this.viewProjection = mat4.create();
     this.modelViewMatrix = mat4.create();
     this.projectionMatrix = mat4.create();
     this.modelViewProjectionMatrix = mat4.create();
     // create bounding box
+    this.vector = this.createVector();
     this.boundingBox = this.createObject(Cube);
     this.boundingBox.useColor([0, 0, 0, 255]);
     this.emptyTexture = this.createTexture().fromColor([0, 0, 0, 0]);
@@ -117,6 +119,7 @@ export default class WebGLRenderer {
  * @return {Quad}
  */
 WebGLRenderer.prototype.createScreen = function() {
+  let gl = this.gl;
   let screen = this.createObject(Quad);
   let fbo = this.createFrameBuffer({
     width: this.width,
@@ -195,7 +198,8 @@ WebGLRenderer.prototype.initPrograms = function() {
     "deferred/water",
     "deferred/terrain",
     "FXAA",
-    "debug-normals"
+    "debug-normals",
+    "deferred/anime-water"
   ];
   let programs = names.map(name => this.createProgram(name));
   return new Promise(resolve => {
@@ -629,8 +633,6 @@ WebGLRenderer.prototype.drawDebugNormals = function(object) {
   let variables = program.locations;
   let mModel = object.getModelMatrix();
   let mModelViewProjection = object.getModelViewProjectionMatrix();
-  gl.uniformMatrix4fv(variables.uMVPMatrix, false, mModelViewProjection);
-  gl.uniformMatrix4fv(variables.uModelMatrix, false, mModel);
   // vertex buffer -> debug normals
   {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.debugNormals);
@@ -638,6 +640,8 @@ WebGLRenderer.prototype.drawDebugNormals = function(object) {
     gl.enableVertexAttribArray(variables.aVertexPosition);
   }
   gl.uniform1f(variables.uDebugNormals, 1);
+  gl.uniform4fv(variables.uColor, new Float32Array([255, 0, 0, 255]));
+  gl.uniformMatrix4fv(variables.uTransformMatrix, false, mModelViewProjection);
   this.drawArrays(gl.LINES, 0, object.data.debugNormals.length / 3);
   gl.uniform1f(variables.uDebugNormals, 0);
   // reset, debug normals -> vertex buffer
@@ -645,6 +649,64 @@ WebGLRenderer.prototype.drawDebugNormals = function(object) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
     gl.vertexAttribPointer(variables.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(variables.aVertexPosition);
+  }
+  this.useRendererProgram(oprogram.name);
+};
+
+/**
+ * Renders a vector
+ * @param {Number} x1
+ * @param {Number} y1
+ * @param {Number} z1
+ * @param {Number} x2
+ * @param {Number} y2
+ * @param {Number} z2
+ * @param {Float32Array} color
+ */
+WebGLRenderer.prototype.drawVector = function(x1, y1, z1, x2, y2, z2, color) {
+  let gl = this.gl;
+  let oprogram = this.getActiveProgram();
+  let program = this.useRendererProgram("debug-normals");
+  let vector = this.vector;
+  let vertices = vector.data.vertices;
+  let buffers = vector.buffers;
+  let variables = program.locations;
+  let mModel = this.modelMatrix;
+  let mViewProjection = this.getViewProjectionMatrix();
+  let isRefreshNeeded = (
+    (vertices[0] !== x1) ||
+    (vertices[1] !== y1) ||
+    (vertices[2] !== z1) ||
+    (vertices[3] !== x2) ||
+    (vertices[4] !== y2) ||
+    (vertices[5] !== z2)
+  );
+  // fill only if necessary
+  if (isRefreshNeeded) {
+    vertices[0] = x1;
+    vertices[1] = y1;
+    vertices[2] = z1;
+    vertices[3] = x2;
+    vertices[4] = y2;
+    vertices[5] = z2;
+  }
+  // trigger buffer refresh
+  if (isRefreshNeeded) vector.refresh();
+  // how to pull vertices
+  {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
+    gl.vertexAttribPointer(variables.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(variables.aVertexPosition);
+  }
+  // send uniforms
+  {
+    gl.uniform1f(variables.uTime, this.frames);
+    gl.uniform4fv(variables.uColor, color || new Float32Array([255, 0, 0, 255]));
+    gl.uniformMatrix4fv(variables.uTransformMatrix, false, mViewProjection);
+  }
+  // draw
+  {
+    this.drawArrays(gl.LINES, 0, 6 / 3);
   }
   this.useRendererProgram(oprogram.name);
 };

@@ -58,7 +58,7 @@ FreeCamera.prototype.control = function(dt, move, mx, my) {
   this.move(dir);
   // if we follow an entity then we don't allow moving below the terrain
   if (this.target.translate) {
-    let terrainY = terrain.getHeightAt(this.position[0], this.position[2]);
+    let terrainY = terrain.getHeightAt(this.position[0], this.position[1], this.position[2]);
     if (this.position[1] > terrainY - 2.0) {
       this.position[1] = terrainY - 2.0;
     }
@@ -147,7 +147,7 @@ FreeCamera.prototype.update = function(delta) {
   // translation target
   if (tTarget && window.terrain) {
     let position = vec3.clone(tTarget.translate.toArray());
-    let minDist = 100.0;
+    let minDist = 150.0;
     let theta = tTarget.rotate.z;
     let hDist = minDist * Math.cos(this.rotation[0]);
     let vDist = minDist * Math.sin(this.rotation[0]);

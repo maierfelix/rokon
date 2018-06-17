@@ -103,6 +103,7 @@ void main(void) {
     normal = (normal * 2.0 - 1.0);
     surfaceNormal = (vTBN * normal);
   }
+  // environment mapping
   if (uHasEnvironmentMap) {
     vec3 view = normalize(vWorldSpacePosition.xyz - uCameraPosition);
     vec3 normal = normalize(surfaceNormal);
@@ -110,28 +111,39 @@ void main(void) {
     vec4 reflectColor = texture(uEnvironmentMap, reflect(view, normal));
     vec4 refractColor = texture(uEnvironmentMap, refract(view, normal, refractRatio));
     vec4 environmentColor = mix(reflectColor, refractColor, 1.5);
-    envColor = environmentColor * 1.25;
+    envColor = environmentColor * 1.0;
   }
+  // shadow mapping
+  lightFactor = (
+    uHasShadowMap ?
+    1.0 - (shadowCalculation(vVertexLightPosition, 0.0)) * 0.175 :
+    lightFactor
+  );
   // RSMA mapping
   // Roughness | Specular | Metalness | Ambient Occlusion
   {
     // roughness
-    if (uHasRoughnessMap) {
-      rsma.x = texture(uRoughnessMap, texCoord).r;
-    } else {
-      rsma.x = 0.45;
-    }
+    rsma.x = (
+      uHasRoughnessMap ?
+      texture(uRoughnessMap, texCoord).r :
+      rsma.x = 0.45
+    );
     // specular
-    if (uHasSpecularMap) {
-      rsma.y = texture(uSpecularMap, texCoord).r;
-    }
+    rsma.y = (
+      uHasSpecularMap ?
+      texture(uSpecularMap, texCoord).r :
+      0.0
+    );
     // ambient occluion
-    if (uHasAmbientOcclusionMap) {
-      rsma.w = texture(uAmbientOcclusionMap, texCoord).r;
-    }
+    rsma.w = (
+      uHasAmbientOcclusionMap ?
+      texture(uAmbientOcclusionMap, texCoord).r :
+      0.0
+    );
     // metalness
     if (uHasMetalnessMap) {
-      rsma.z = texture(uMetalnessMap, texCoord).r;
+      rsma.z = texture(uMetalnessMap, texCoord).r * 1.5;
+      color = mix(color, envColor, rsma.z * 0.125);
     } else if (uHasEnvironmentMap) {
       color = envColor * 1.5;
       rsma.x = 0.55;
@@ -141,14 +153,11 @@ void main(void) {
     }
   }
   // specular
-  if (uHasEmissiveMap) {
-    emissive = texture(uEmissiveMap, texCoord);
-  }
-  // shadow
-  if (uHasShadowMap) {
-    float shadow = shadowCalculation(vVertexLightPosition, 0.0);
-    lightFactor = 1.0 - shadow * 0.175;
-  }
+  emissive = (
+    uHasEmissiveMap ?
+    texture(uEmissiveMap, texCoord) :
+    vec4(0.0)
+  );
   // apply fog
   {
     //color = mix(color, uFogColor / 255.0, 1.0 - vVisibility);

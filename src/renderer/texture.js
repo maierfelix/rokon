@@ -109,15 +109,15 @@ ObjectTexture.prototype.createTexture = function() {
 
 /**
  * Creates a new empty texture
- * @param {HTMLImageElement} img
+ * @param {HTMLImageElement|HTMLCanvasElement} element
  * @param {WebGLTexture} texture
  * @param {Boolean} anisotropic
  */
-ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropic = false) {
+ObjectTexture.prototype.readImageIntoTexture = function(element, texture, anisotropic = false) {
   let gl = this.gl;
   let previous = this.getActiveTexture();
   let pixelated = this.pixelated;
-  let pot = isPowerOf2(img.width) && isPowerOf2(img.height);
+  let pot = isPowerOf2(element.width) && isPowerOf2(element.height);
   let wrap = this.wrap;
   gl.bindTexture(gl.TEXTURE_2D, texture);
   // use anisotropic filtering
@@ -127,7 +127,7 @@ ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropi
   }
   if (!pixelated) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   if (this.flip.y) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, element.width, element.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, element);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap.s);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap.t);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, wrap.r);
@@ -148,7 +148,17 @@ ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropi
   if (pot && !pixelated && this.mips) gl.generateMipmap(gl.TEXTURE_2D);
   // create binary data representation
   if (this.binary) {
-    let data = getImageBinaryData(img);
+    let data = null;
+    if (element instanceof HTMLImageElement) {
+      data = getImageBinaryData(element);
+    }
+    else if (element instanceof HTMLCanvasElement) {
+      let ctx = element.getContext("2d");
+      data = ctx.getImageData(0, 0, element.width, element.height).data;
+    }
+    else {
+      console.warn(`Cannot resolve binary data for`, element.constructor.name);
+    }
     this.setBinaryData(data);
   }
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -163,7 +173,12 @@ ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropi
 ObjectTexture.prototype.fromCanvas = function(canvas) {
   let gl = this.gl;
   let texture = this.createTexture();
-  this.readImageIntoTexture(img, texture);
+  this.wrap = {
+    s: gl.CLAMP_TO_EDGE,
+    t: gl.CLAMP_TO_EDGE,
+    r: gl.REPEAT
+  };
+  this.readImageIntoTexture(canvas, texture);
   this.loaded = true;
   this.setTexture(texture);
   this.sourceElement = canvas;

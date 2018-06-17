@@ -1,5 +1,6 @@
 import Cube from "./objects/cube";
 import Quad from "./objects/quad";
+import Vector from "./objects/vector";
 import Sprite from "./objects/sprite";
 
 import Light from "./light";
@@ -183,6 +184,17 @@ export function createCubeMap(opts = {}) {
   this.setDefaultOptionProperties(opts);
   let cubemap = new CubeMap(opts);
   return cubemap;
+};
+
+/**
+ * Creates a new vector
+ * @param {Object} opts
+ * @return {Vector}
+ */
+export function createVector(opts = {}) {
+  this.setDefaultOptionProperties(opts);
+  let obj = new Vector(opts);
+  return obj;
 };
 
 /**

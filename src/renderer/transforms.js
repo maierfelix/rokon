@@ -51,6 +51,24 @@ export function getModelMatrix(object) {
  * @param {WebGLObject} object
  * @return {Float32Array} - The model view matrix
  */
+export function getViewProjectionMatrix(object) {
+  let mView = this.getViewMatrix();
+  let mProjection = this.getProjectionMatrix();
+  let mViewProjection = this.viewProjection;
+  mat4.identity(mViewProjection);
+  mat4.multiply(
+    mViewProjection,
+    mProjection,
+    mView
+  );
+  return mViewProjection;
+};
+
+/**
+ * Calculates the model-view-matrix of an object
+ * @param {WebGLObject} object
+ * @return {Float32Array} - The model view matrix
+ */
 export function getModelViewMatrix(object) {
   let translate = object.translate;
   let rotate = object.rotate;

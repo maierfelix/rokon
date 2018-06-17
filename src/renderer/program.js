@@ -28,6 +28,7 @@ export default class RendererProgram {
     this.shaders = { vertex: null, fragment: null };
     this.variables = {};
     this.locations = {};
+    this.bindings = {};
     this.externals = null;
   }
 };
@@ -224,7 +225,20 @@ RendererProgram.prototype.linkVariables = function(variables) {
     }
     def.location = location;
     this.locations[name] = location;
+    if (Number.isInteger(location)) this.bindings[location] = null;
   };
+};
+
+RendererProgram.prototype.isAttributeBufferEnabled = function(location) {
+  return this.bindings[location] !== null;
+};
+
+RendererProgram.prototype.enableAttributeBuffer = function(location, buffer, size) {
+  let gl = this.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(location);
+  if (Number.isInteger(location)) this.bindings[location] = location;
 };
 
 RendererProgram.prototype.getUniformLocation = function(locationName) {
