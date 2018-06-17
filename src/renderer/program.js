@@ -35,14 +35,14 @@ export default class RendererProgram {
 
 /**
  * Loads and builds given shaders
+ * @param {String} path
  * @param {String} name
- * @param {Object} opts
  */
-RendererProgram.prototype.build = function(name, opts) {
+RendererProgram.prototype.build = function(path, name) {
   this.name = name;
   return new Promise(resolve => {
-    loadText(`../shaders/${name}.vert`).then(vertexSrc => {
-      loadText(`../shaders/${name}.frag`).then(fragmentSrc => {
+    loadText(`${path}${name}.vert`).then(vertexSrc => {
+      loadText(`${path}${name}.frag`).then(fragmentSrc => {
         if (!vertexSrc.length || !fragmentSrc.length) {
           console.warn(`Cannot load shader source ${name}`);
           return;

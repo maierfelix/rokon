@@ -37,15 +37,16 @@ import * as _shadow_instanced from "./render/shadow-instanced";
  */
 export default class WebGLRenderer {
   /**
-   * @param {Stage} stage
+   * @param {Object} opts
    * @constructor
    */
-  constructor(stage) {
+  constructor(opts = {}) {
     this.uid = uid();
-    this.stage = stage;
-    this.canvas = stage.canvas;
-    this.width = 0;
-    this.height = 0;
+    this.canvas = (
+      opts.canvas || document.createElement("canvas")
+    );
+    this.width = opts.width || this.canvas.width || 128;
+    this.height = opts.height || this.canvas.height || 128;
     this.frames = 0;
     this.frameCount = 0;
     this.drawCalls = 0;
@@ -105,12 +106,10 @@ export default class WebGLRenderer {
     this.gBuffer = null;
     this.objects = [];
     // initialize default shaders
-    this.initPrograms().then(() => {
-      this.screen = this.createScreen();
-      this.gBuffer = this.createGBuffer();
-      this.loadExtensions();
-      this.ready = true;
-    });
+    this.screen = this.createScreen();
+    this.gBuffer = this.createGBuffer();
+    this.loadExtensions();
+    this.ready = true;
   }
 };
 
@@ -171,46 +170,6 @@ WebGLRenderer.prototype.flush = function() {
 };
 
 /**
- * Initializes all shader programs
- * Afterwards the screen fbo is created
- */
-WebGLRenderer.prototype.initPrograms = function() {
-  let names = [
-    "skybox",
-    "water",
-    "terrain",
-    "object",
-    "object-shadow",
-    "instanced-object",
-    "instanced-object-shadow",
-    "animated-object",
-    "blur-filter",
-    "bright-filter",
-    "combine-filter",
-    "contrast",
-    "god-ray",
-    "quad",
-    "occlusion-filter",
-    "deferred/object",
-    "deferred/g-buffer",
-    "deferred/object-point-light",
-    "deferred/directional-light",
-    "deferred/water",
-    "deferred/terrain",
-    "FXAA",
-    "debug-normals",
-    "deferred/anime-water"
-  ];
-  let programs = names.map(name => this.createProgram(name));
-  return new Promise(resolve => {
-    Promise.all(programs).then(results => {
-      results.map(program => this.programs[program.name] = program);
-      resolve();
-    });
-  });
-};
-
-/**
  * Indicates if an FBO is the main FBO
  * @param {FrameBuffer} fbo
  * @return {Boolean}
@@ -228,7 +187,15 @@ WebGLRenderer.prototype.isMainFrameBuffer = function(fbo) {
  * @return {Boolean}
  */
 WebGLRenderer.prototype.isProgramLoaded = function(name) {
-  return !!this.programs[name];
+  return !!this.programs[name] && this.programs[name].loaded;
+};
+
+/**
+ * Adds a program to the renderer
+ * @param {RendererProgram} program
+ */
+WebGLRenderer.prototype.addProgram = function(program) {
+  this.programs[program.name] = program;
 };
 
 /**

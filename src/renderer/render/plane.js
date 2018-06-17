@@ -21,12 +21,6 @@ export function renderPlane(object) {
     gl.vertexAttribPointer(variables.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(variables.aVertexPosition);
   }
-  // how to pull uvs
-  if (object.data.uvs.length) {
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.uvs);
-    gl.vertexAttribPointer(variables.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(variables.aTextureCoord);
-  }
   // which indices to use
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
   // send uniforms
@@ -52,7 +46,6 @@ export function renderPlane(object) {
     this.useTexture(refractionDepthTexture, variables.uRefractionDepthTexture, 1);
     this.useTexture(dudvTexture, variables.uDudvTexture, 2);
     this.useTexture(normalTexture, variables.uNormalTexture, 3);
-    this.useTexture(object.animeTexture1, variables.uAnimeTexture1, 4);
   } else {
     this.useTexture(object.texture, variables.uSampler, 0);
   }

@@ -152,15 +152,16 @@ export function createBatch(opts = {}) {
 
 /**
  * Creates a new WebGL renderer program
+ * @param {String} path
  * @param {String} name
  * @return {RendererProgram}
  */
-export function createProgram(name) {
-  let opts = { name };
+export function createProgram(path, name) {
+  let opts = {};
   this.setDefaultOptionProperties(opts);
   let program = new RendererProgram(opts);
   return new Promise(resolve => {
-    program.build(name).then(resolve);
+    program.build(path, name).then(resolve);
   });
 };
 
