@@ -25,7 +25,7 @@ export default class FreeCamera extends Camera {
       rotate: null,
       translate: null
     };
-    this.positionSpeed = 128;
+    this.positionSpeed = 48;
     this.rotationSpeed = 0.01;
   }
 };

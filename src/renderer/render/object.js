@@ -8,8 +8,10 @@ export function renderObject(object) {
   let program = this.getActiveProgram();
   let buffers = object.buffers;
   let vClipPlane = this.clipPlane;
+  let hasRSMMap = object.rsmTexture !== null;
   let hasNormalMap = object.normalTexture !== null;
   let hasShadowMap = object.shadowTexture !== null;
+  hasShadowMap = false;
   let hasSpecularMap = object.specularTexture !== null;
   let useSpecularLighting = object.specularLighting;
   let useEnvironmentMapping = (
@@ -109,6 +111,7 @@ export function renderObject(object) {
   }
   // send bools
   {
+    gl.uniform1f(variables.uHasRSMMap, hasRSMMap | 0);
     gl.uniform1f(variables.uIsLightSource, (object.light !== null) | 0);
     gl.uniform1f(variables.uHasNormalMap, hasNormalMap | 0);
     gl.uniform1f(variables.uHasShadowMap, hasShadowMap | 0);
@@ -143,6 +146,9 @@ export function renderObject(object) {
     }
     if (useAmbientOcclusionMapping) {
       this.useTexture(object.ambientOcclusionTexture, variables.uAmbientOcclusionMap, 7);
+    }
+    if (hasRSMMap) {
+      this.useTexture(object.rsmTexture, variables.uRSMMap, 8);
     }
     if (useEnvironmentMapping) {
       this.useTexture(object.environmentTexture, variables.uEnvironmentMap, 10);

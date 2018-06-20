@@ -19,6 +19,7 @@ export default class RendererProgram {
     this.gl = opts.gl;
     this.renderer = opts.renderer;
     this.name = null;
+    this.path = null;
     this.loaded = false;
     this.native = null;
     this.cache = {
@@ -29,7 +30,6 @@ export default class RendererProgram {
     this.variables = {};
     this.locations = {};
     this.bindings = {};
-    this.externals = null;
   }
 };
 
@@ -47,6 +47,17 @@ RendererProgram.prototype.build = function(path, name) {
           console.warn(`Cannot load shader source ${name}`);
           return;
         }
+        this.loaded = false;
+        this.native = null;
+        this.cache = {
+          uniforms: {}
+        };
+        this.sources = { vertex: null, fragment: null };
+        this.shaders = { vertex: null, fragment: null };
+        this.variables = {};
+        this.locations = {};
+        this.bindings = {};
+        this.path = path;
         this.buildShaderProgram(vertexSrc, fragmentSrc);
         this.loaded = true;
         resolve(this);
@@ -77,22 +88,13 @@ RendererProgram.prototype.buildShaderProgram = function(vertexSrc, fragmentSrc) 
   }
 };
 
-RendererProgram.prototype.resolveDeclarations = function(source, expect) {
-  let rxName = /<(.*)>/;
-  let rxPragma = /(pragma) (.*) (.*);/g;
-  let match = null;
-  let declarations = [];
-  while (match = rxPragma.exec(source)) {
-    let split = match[0].split(" ");
-    let kind = split[1];
-    if (kind === expect) {
-      let funcName = rxName.exec(split[2])[1];
-      let fileName = rxName.exec(split[4])[1];
-      let decl = { func: funcName, file: fileName };
-      declarations.push(decl);
-    }
-  };
-  return declarations;
+/**
+ * Reloads and rebuilds this shader program
+ */
+RendererProgram.prototype.reload = function() {
+  this.build(this.path, this.name).then(ready => {
+    console.info(`Reloaded shader ${name}`);
+  });
 };
 
 /**

@@ -63,13 +63,14 @@ export default class WebGLRenderer {
     this.programs = {};
     this.extensions = {};
     this.debug = {
-      FXAA: false,
+      glow: true,
+      FXAA: true,
       normals: false,
       boundings: false,
       wireframe: false
     };
     this.gl = this.canvas.getContext("webgl2", {
-      alpha: true,
+      alpha: false,
       stencil: false,
       antialias: false,
       premultipliedAlpha: false,
@@ -531,6 +532,28 @@ WebGLRenderer.prototype.getViewPosition = function(vec) {
   vec3.set(out, vec[0], vec[1], vec[2]);
   vec3.transformMat4(out, out, mView);
   return out;
+};
+
+/**
+ * Returns the given renderer program by name
+ * @param {String} name
+ */
+WebGLRenderer.prototype.getRendererProgramByPath = function(name) {
+  let programs = this.programs;
+  for (let key in programs) {
+    if (key === name) return programs[key];
+  };
+  return null;
+};
+
+/**
+ * Relaods the given shader program
+ * @param {String} name 
+ */
+WebGLRenderer.prototype.reloadRendererProgram = function(name) {
+  console.log(name);
+  let program = this.getRendererProgramByPath(name);
+  if (program !== null) program.reload();
 };
 
 /**

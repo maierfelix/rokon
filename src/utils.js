@@ -80,6 +80,31 @@ export function createCanvasBuffer(width, height) {
 };
 
 /**
+ * Merges 3 RSM canvae into one canvae
+ * @param {HTMLCanvasElement} r
+ * @param {HTMLCanvasElement} s
+ * @param {HTMLCanvasElement} m
+ * @return {Canvas2DRenderingContext}
+ */
+export function mergeRSMCanvae(r, s, m) {
+  let { width, height } = r;
+  let buffer = createCanvasBuffer(width, height);
+  let imgData = new ImageData(width, height);
+  let rData = r.getContext("2d").getImageData(0, 0, width, height);
+  let sData = s.getContext("2d").getImageData(0, 0, width, height);
+  let mData = m.getContext("2d").getImageData(0, 0, width, height);
+  for (let ii = 0; ii < width * height; ++ii) {
+    let index = (ii * 4) | 0;
+    imgData.data[index + 0] = rData.data[index + 0];
+    imgData.data[index + 1] = sData.data[index + 0];
+    imgData.data[index + 2] = mData.data[index + 0];
+    imgData.data[index + 3] = 255;
+  };
+  buffer.putImageData(imgData, 0, 0);
+  return buffer;
+};
+
+/**
  * Indicates if a number is power of two
  * @param {Number} v
  * @return {Boolean}
@@ -115,6 +140,15 @@ export function degToRad(d) {
  */
 export function clamp(n, min, max) {
   return Math.min(Math.max(n, min), max);
+};
+
+/**
+ * @param {Number} b - bias
+ * @param {Number} t - time 0-1
+ * @return {Number}
+ */
+function biasLerp(b, t) {
+  return (t / ((((1.0 / b) - 2.0) * (1.0 - t)) + 1.0));
 };
 
 /**
@@ -357,13 +391,4 @@ export function calculateTangentsBitangents(obj) {
   };
 
   return { tangents, bitangents, debugNormals };
-};
-
-/**
- * @param {Number} b - bias
- * @param {Number} t - time 0-1
- * @return {Number}
- */
-function biasLerp(b, t) {
-  return (t / ((((1.0 / b) - 2.0) * (1.0 - t)) + 1.0));
 };

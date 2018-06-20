@@ -65,6 +65,7 @@ export default class WebGLObject {
       };
       this.loader = null;
       this.texture = null;
+      this.rsmTexture = null;
       this.normalTexture = null;
       this.shadowTexture = null;
       this.specularTexture = null;
@@ -248,6 +249,14 @@ WebGLObject.prototype.useMetalnessMap = function(texture) {
  */
 WebGLObject.prototype.useRoughnessMap = function(texture) {
   this.roughnessTexture = texture;
+};
+
+/**
+ * Uses the given RSM map
+ * @param {WebGLObjectTexture}
+ */
+WebGLObject.prototype.useRSMMap = function(texture) {
+  this.rsmTexture = texture;
 };
 
 /**

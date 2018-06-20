@@ -2,6 +2,8 @@ import {
   uid,
   loadImage,
   isPowerOf2,
+  mergeRSMCanvae,
+  loadImageAsCanvas,
   getImageBinaryData
 } from "../utils";
 
@@ -240,5 +242,33 @@ ObjectTexture.prototype.fromColor = function(color) {
   if (this.binary) this.setBinaryData(data);
   this.sourceElement = null;
   this.loaded = true;
+  return this;
+};
+
+/**
+ * Creates a single RSM texture from 3 texture inputs
+ * @param {Object} opts
+ * @return {ObjectTexture}
+ */
+ObjectTexture.prototype.fromRSM = function(opts = {}) {
+  let renderer = this.renderer;
+  // set default texture
+  this.fromColor([0, 0, 0]);
+  loadImageAsCanvas(opts.R).then(canvasR => {
+    loadImageAsCanvas(opts.S).then(canvasS => {
+      loadImageAsCanvas(opts.M).then(canvasM => {
+        let buffer = mergeRSMCanvae(canvasR, canvasS, canvasM);
+        this.fromCanvas(buffer.canvas);
+        if (
+          (canvasR.width  !== canvasS.width)  ||
+          (canvasR.width  !== canvasM.width)  ||
+          (canvasS.width  !== canvasM.width)  ||
+          (canvasR.height !== canvasS.height) ||
+          (canvasR.height !== canvasM.height) ||
+          (canvasS.height !== canvasM.height)
+        ) console.assert(`RSM textures differ in sizes! Expected ${canvasR.width}x${canvasR.height}`);
+      });
+    });
+  });
   return this;
 };
