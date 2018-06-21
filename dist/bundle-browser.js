@@ -10035,9 +10035,6 @@ class Stage {
       obj.useRoughnessMap(renderer.createTexture().fromImagePath("mossy-ground1-roughness.png"));
       obj.useSpecularMap(renderer.createTexture().fromImagePath("mossy-ground1-specular.png"));
       //obj.useAmbientOcclusionMap(renderer.createTexture().fromColor([255,255,255]));
-      setTimeout(() => {
-        obj.environmentMapping = true;
-      }, 1e3);
       window.terrain = obj;
     }
     // test blender object
@@ -10148,9 +10145,6 @@ class Stage {
         obj.rotate.y = 180;
         obj.specularLighting = true;
         objects.push(obj);
-        setTimeout(() => {
-          obj.environmentMapping = true;
-        }, 1e3);
         window.alien = obj;
       });
     }

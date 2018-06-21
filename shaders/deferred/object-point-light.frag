@@ -89,7 +89,7 @@ void main(void) {
 
   //------------------
 
-  vec3 F0 = vec3(rsma.z * 1.25);
+  vec3 F0 = vec3(rsma.z * 1.75);
   //F0 = mix(F0, albedo, metalness);
 
   float D = BRDF_D_GGX(NdotH, roughness); //normal distribution
