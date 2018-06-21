@@ -10008,7 +10008,7 @@ class Stage {
       window.water = water;
     }
     // test sphere
-    {
+    /*{
       renderer.createObjectFile().fromPath("sphere_perfect.obj").then(obj => {
         obj.useTexture(renderer.createTexture().fromImagePath("rustediron2_albedo.png"));
         obj.useNormalMap(renderer.createTexture().fromImagePath("rustediron2_normal.png"));
@@ -10022,7 +10022,7 @@ class Stage {
         objects.push(obj);
         window.sphere = obj;
       });
-    }
+    }*/
     // terrain
     {
       let obj = renderer.createObject(Terrain);
