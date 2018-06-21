@@ -30,6 +30,7 @@ uniform vec3 uLightPosition;
 uniform vec3 uCameraPosition;
 
 // bools
+uniform bool uHasRSMMap;
 uniform bool uIsLightSource;
 uniform bool uHasNormalMap;
 uniform bool uHasShadowMap;
@@ -45,6 +46,7 @@ uniform vec4 uFogColor;
 uniform float uGlossFactor;
 
 // texture samplers
+uniform sampler2D uRSMMap;
 uniform sampler2D uSampler;
 uniform sampler2D uNormalMap;
 uniform sampler2D uShadowMap;
@@ -103,6 +105,7 @@ void main(void) {
     normal = (normal * 2.0 - 1.0);
     surfaceNormal = (vTBN * normal);
   }
+  // environment mapping
   if (uHasEnvironmentMap) {
     vec3 view = normalize(vWorldSpacePosition.xyz - uCameraPosition);
     vec3 normal = normalize(surfaceNormal);
@@ -110,45 +113,60 @@ void main(void) {
     vec4 reflectColor = texture(uEnvironmentMap, reflect(view, normal));
     vec4 refractColor = texture(uEnvironmentMap, refract(view, normal, refractRatio));
     vec4 environmentColor = mix(reflectColor, refractColor, 1.5);
-    envColor = environmentColor * 1.25;
+    envColor = environmentColor * 1.0;
   }
+  // shadow mapping
+  lightFactor = (
+    uHasShadowMap ?
+    1.0 - (shadowCalculation(vVertexLightPosition, 0.0)) * 0.175 :
+    lightFactor
+  );
   // RSMA mapping
   // Roughness | Specular | Metalness | Ambient Occlusion
-  {
+  if (!uHasRSMMap) {
     // roughness
-    if (uHasRoughnessMap) {
-      rsma.x = texture(uRoughnessMap, texCoord).r;
-    } else {
-      rsma.x = 0.45;
-    }
+    rsma.x = (
+      uHasRoughnessMap ?
+      texture(uRoughnessMap, texCoord).r :
+      0.0
+    );
     // specular
-    if (uHasSpecularMap) {
-      rsma.y = texture(uSpecularMap, texCoord).r;
-    }
-    // ambient occluion
-    if (uHasAmbientOcclusionMap) {
-      rsma.w = texture(uAmbientOcclusionMap, texCoord).r;
-    }
+    rsma.y = (
+      uHasSpecularMap ?
+      texture(uSpecularMap, texCoord).r :
+      0.0
+    );
     // metalness
-    if (uHasMetalnessMap) {
-      rsma.z = texture(uMetalnessMap, texCoord).r;
-    } else if (uHasEnvironmentMap) {
-      color = envColor * 1.5;
-      rsma.x = 0.55;
-      rsma.z = 0.95;
-    } else {
-      rsma.z = 0.35;
-    }
+    rsma.z = (
+      uHasMetalnessMap ?
+      texture(uMetalnessMap, texCoord).r :
+      0.0
+    );
+    // ao
+    rsma.w = (
+      uHasAmbientOcclusionMap ?
+      texture(uAmbientOcclusionMap, texCoord).r :
+      0.0
+    );
+  // use joined RSM map
+  } else {
+    vec4 rsmTexture = texture(uRSMMap, texCoord);
+    //rsma.xyz = texture(uRSMMap, texCoord).rgb;
+    // roughness
+    rsma.x = rsmTexture.r;
+    // specular
+    rsma.y = rsmTexture.g;
+    // metalness
+    rsma.z = rsmTexture.b;
   }
-  // specular
-  if (uHasEmissiveMap) {
-    emissive = texture(uEmissiveMap, texCoord);
-  }
-  // shadow
-  if (uHasShadowMap) {
-    float shadow = shadowCalculation(vVertexLightPosition, 0.0);
-    lightFactor = 1.0 - shadow * 0.175;
-  }
+  // emissive
+  emissive = (
+    uHasEmissiveMap ?
+    texture(uEmissiveMap, texCoord) :
+    vec4(0.0)
+  );
+  // environment color
+  //color = (envColor) * 1.25;
   // apply fog
   {
     //color = mix(color, uFogColor / 255.0, 1.0 - vVisibility);

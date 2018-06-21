@@ -49,7 +49,18 @@ function loadImage(path) {
  * @param {String} path - Path to the image
  * @return {Promise}
  */
-
+function loadImageAsCanvas(path) {
+  return new Promise(resolve => {
+    loadImage(path).then(img => {
+      let width = img.width;
+      let height = img.height;
+      let buffer = createCanvasBuffer(width, height);
+      let canvas = buffer.canvas;
+      buffer.drawImage(img, 0, 0);
+      resolve(canvas);
+    });
+  });
+}
 
 /**
  * Creates a canvas with the given dimensions
@@ -63,6 +74,31 @@ function createCanvasBuffer(width, height) {
   canvas.height = height;
   let ctx = canvas.getContext("2d");
   return ctx;
+}
+
+/**
+ * Merges 3 RSM canvae into one canvae
+ * @param {HTMLCanvasElement} r
+ * @param {HTMLCanvasElement} s
+ * @param {HTMLCanvasElement} m
+ * @return {Canvas2DRenderingContext}
+ */
+function mergeRSMCanvae(r, s, m) {
+  let { width, height } = r;
+  let buffer = createCanvasBuffer(width, height);
+  let imgData = new ImageData(width, height);
+  let rData = r.getContext("2d").getImageData(0, 0, width, height);
+  let sData = s.getContext("2d").getImageData(0, 0, width, height);
+  let mData = m.getContext("2d").getImageData(0, 0, width, height);
+  for (let ii = 0; ii < width * height; ++ii) {
+    let index = (ii * 4) | 0;
+    imgData.data[index + 0] = rData.data[index + 0];
+    imgData.data[index + 1] = sData.data[index + 0];
+    imgData.data[index + 2] = mData.data[index + 0];
+    imgData.data[index + 3] = 255;
+  }
+  buffer.putImageData(imgData, 0, 0);
+  return buffer;
 }
 
 /**
@@ -98,6 +134,8 @@ function isPowerOf2(v) {
 function clamp(n, min, max) {
   return Math.min(Math.max(n, min), max);
 }
+
+
 
 /**
  * Max safe integer
@@ -1536,6 +1574,7 @@ class WebGLObject {
       };
       this.loader = null;
       this.texture = null;
+      this.rsmTexture = null;
       this.normalTexture = null;
       this.shadowTexture = null;
       this.specularTexture = null;
@@ -1719,6 +1758,14 @@ WebGLObject.prototype.useMetalnessMap = function(texture) {
  */
 WebGLObject.prototype.useRoughnessMap = function(texture) {
   this.roughnessTexture = texture;
+};
+
+/**
+ * Uses the given RSM map
+ * @param {WebGLObjectTexture}
+ */
+WebGLObject.prototype.useRSMMap = function(texture) {
+  this.rsmTexture = texture;
 };
 
 /**
@@ -2525,7 +2572,7 @@ FrameBuffer.prototype.createTexture = function(opts) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, wrap.r);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texImage2D(gl.TEXTURE_2D, 0, opts.format, this.width, this.height, 0, gl.DEPTH_COMPONENT, opts.size, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, opts.format, this.width, this.height, 0, gl.DEPTH_COMPONENT, opts.size || gl.FLOAT, null);
     } else {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap.s);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap.t);
@@ -2868,15 +2915,15 @@ ObjectTexture.prototype.createTexture = function() {
 
 /**
  * Creates a new empty texture
- * @param {HTMLImageElement} img
+ * @param {HTMLImageElement|HTMLCanvasElement} element
  * @param {WebGLTexture} texture
  * @param {Boolean} anisotropic
  */
-ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropic = false) {
+ObjectTexture.prototype.readImageIntoTexture = function(element, texture, anisotropic = false) {
   let gl = this.gl;
   let previous = this.getActiveTexture();
   let pixelated = this.pixelated;
-  let pot = isPowerOf2(img.width) && isPowerOf2(img.height);
+  let pot = isPowerOf2(element.width) && isPowerOf2(element.height);
   let wrap = this.wrap;
   gl.bindTexture(gl.TEXTURE_2D, texture);
   // use anisotropic filtering
@@ -2886,7 +2933,7 @@ ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropi
   }
   if (!pixelated) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   if (this.flip.y) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, element.width, element.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, element);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap.s);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap.t);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, wrap.r);
@@ -2907,7 +2954,17 @@ ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropi
   if (pot && !pixelated && this.mips) gl.generateMipmap(gl.TEXTURE_2D);
   // create binary data representation
   if (this.binary) {
-    let data = getImageBinaryData(img);
+    let data = null;
+    if (element instanceof HTMLImageElement) {
+      data = getImageBinaryData(element);
+    }
+    else if (element instanceof HTMLCanvasElement) {
+      let ctx = element.getContext("2d");
+      data = ctx.getImageData(0, 0, element.width, element.height).data;
+    }
+    else {
+      console.warn(`Cannot resolve binary data for`, element.constructor.name);
+    }
     this.setBinaryData(data);
   }
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -2920,8 +2977,14 @@ ObjectTexture.prototype.readImageIntoTexture = function(img, texture, anisotropi
  * @return {ObjectTexture}
  */
 ObjectTexture.prototype.fromCanvas = function(canvas) {
+  let gl = this.gl;
   let texture = this.createTexture();
-  this.readImageIntoTexture(img, texture);
+  this.wrap = {
+    s: gl.CLAMP_TO_EDGE,
+    t: gl.CLAMP_TO_EDGE,
+    r: gl.REPEAT
+  };
+  this.readImageIntoTexture(canvas, texture);
   this.loaded = true;
   this.setTexture(texture);
   this.sourceElement = canvas;
@@ -2982,6 +3045,60 @@ ObjectTexture.prototype.fromColor = function(color) {
   this.sourceElement = null;
   this.loaded = true;
   return this;
+};
+
+/**
+ * Creates a single RSM texture from 3 texture inputs
+ * @param {Object} opts
+ * @return {ObjectTexture}
+ */
+ObjectTexture.prototype.fromRSM = function(opts = {}) {
+  this.fromColor([0, 0, 0]);
+  loadImageAsCanvas(opts.R).then(canvasR => {
+    loadImageAsCanvas(opts.S).then(canvasS => {
+      loadImageAsCanvas(opts.M).then(canvasM => {
+        let buffer = mergeRSMCanvae(canvasR, canvasS, canvasM);
+        this.fromCanvas(buffer.canvas);
+        if (
+          (canvasR.width  !== canvasS.width)  ||
+          (canvasR.width  !== canvasM.width)  ||
+          (canvasS.width  !== canvasM.width)  ||
+          (canvasR.height !== canvasS.height) ||
+          (canvasR.height !== canvasM.height) ||
+          (canvasS.height !== canvasM.height)
+        ) console.assert(`RSM textures differ in sizes! Expected ${canvasR.width}x${canvasR.height}`);
+      });
+    });
+  });
+  return this;
+};
+
+/**
+ * A simple vector
+ * @class Vector
+ * @extends WebGLObject
+ */
+class Vector extends WebGLObject {
+  /**
+   * @param {Object} opts
+   * @constructor
+   */
+  constructor(opts = {}) {
+    super(opts);
+  }
+}
+
+Vector.prototype.createMesh = function() {
+  let data = this.data;
+  data.vertices = new Float32Array(6);
+};
+
+/**
+ * Returns the native texture
+ * @return {WebGLTexture}
+ */
+Vector.prototype.getNativeTexture = function() {
+  return this.texture.native;
 };
 
 /**
@@ -3235,6 +3352,7 @@ class RendererProgram {
     this.gl = opts.gl;
     this.renderer = opts.renderer;
     this.name = null;
+    this.path = null;
     this.loaded = false;
     this.native = null;
     this.cache = {
@@ -3244,24 +3362,35 @@ class RendererProgram {
     this.shaders = { vertex: null, fragment: null };
     this.variables = {};
     this.locations = {};
-    this.externals = null;
+    this.bindings = {};
   }
 }
 
 /**
  * Loads and builds given shaders
+ * @param {String} path
  * @param {String} name
- * @param {Object} opts
  */
-RendererProgram.prototype.build = function(name, opts) {
+RendererProgram.prototype.build = function(path, name) {
   this.name = name;
   return new Promise(resolve => {
-    loadText(`../shaders/${name}.vert`).then(vertexSrc => {
-      loadText(`../shaders/${name}.frag`).then(fragmentSrc => {
+    loadText(`${path}${name}.vert`).then(vertexSrc => {
+      loadText(`${path}${name}.frag`).then(fragmentSrc => {
         if (!vertexSrc.length || !fragmentSrc.length) {
           console.warn(`Cannot load shader source ${name}`);
           return;
         }
+        this.loaded = false;
+        this.native = null;
+        this.cache = {
+          uniforms: {}
+        };
+        this.sources = { vertex: null, fragment: null };
+        this.shaders = { vertex: null, fragment: null };
+        this.variables = {};
+        this.locations = {};
+        this.bindings = {};
+        this.path = path;
         this.buildShaderProgram(vertexSrc, fragmentSrc);
         this.loaded = true;
         resolve(this);
@@ -3292,22 +3421,13 @@ RendererProgram.prototype.buildShaderProgram = function(vertexSrc, fragmentSrc) 
   }
 };
 
-RendererProgram.prototype.resolveDeclarations = function(source, expect) {
-  let rxName = /<(.*)>/;
-  let rxPragma = /(pragma) (.*) (.*);/g;
-  let match = null;
-  let declarations = [];
-  while (match = rxPragma.exec(source)) {
-    let split = match[0].split(" ");
-    let kind = split[1];
-    if (kind === expect) {
-      let funcName = rxName.exec(split[2])[1];
-      let fileName = rxName.exec(split[4])[1];
-      let decl = { func: funcName, file: fileName };
-      declarations.push(decl);
-    }
-  }
-  return declarations;
+/**
+ * Reloads and rebuilds this shader program
+ */
+RendererProgram.prototype.reload = function() {
+  this.build(this.path, this.name).then(ready => {
+    console.info(`Reloaded shader ${name}`);
+  });
 };
 
 /**
@@ -3440,7 +3560,20 @@ RendererProgram.prototype.linkVariables = function(variables) {
     }
     def.location = location;
     this.locations[name] = location;
+    if (Number.isInteger(location)) this.bindings[location] = null;
   }
+};
+
+RendererProgram.prototype.isAttributeBufferEnabled = function(location) {
+  return this.bindings[location] !== null;
+};
+
+RendererProgram.prototype.enableAttributeBuffer = function(location, buffer, size) {
+  let gl = this.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(location);
+  if (Number.isInteger(location)) this.bindings[location] = location;
 };
 
 RendererProgram.prototype.getUniformLocation = function(locationName) {
@@ -6563,15 +6696,16 @@ function createBatch(opts = {}) {
 
 /**
  * Creates a new WebGL renderer program
+ * @param {String} path
  * @param {String} name
  * @return {RendererProgram}
  */
-function createProgram(name) {
-  let opts = { name };
+function createProgram(path, name) {
+  let opts = {};
   this.setDefaultOptionProperties(opts);
   let program = new RendererProgram(opts);
   return new Promise(resolve => {
-    program.build(name).then(resolve);
+    program.build(path, name).then(resolve);
   });
 }
 
@@ -6595,6 +6729,17 @@ function createCubeMap(opts = {}) {
   this.setDefaultOptionProperties(opts);
   let cubemap = new CubeMap(opts);
   return cubemap;
+}
+
+/**
+ * Creates a new vector
+ * @param {Object} opts
+ * @return {Vector}
+ */
+function createVector(opts = {}) {
+  this.setDefaultOptionProperties(opts);
+  let obj = new Vector(opts);
+  return obj;
 }
 
 /**
@@ -6625,6 +6770,7 @@ var _create = Object.freeze({
 	createProgram: createProgram,
 	createFilter: createFilter,
 	createCubeMap: createCubeMap,
+	createVector: createVector,
 	createLight: createLight
 });
 
@@ -6781,6 +6927,24 @@ function getModelMatrix(object) {
  * @param {WebGLObject} object
  * @return {Float32Array} - The model view matrix
  */
+function getViewProjectionMatrix(object) {
+  let mView = this.getViewMatrix();
+  let mProjection = this.getProjectionMatrix();
+  let mViewProjection = this.viewProjection;
+  mat4.identity(mViewProjection);
+  mat4.multiply(
+    mViewProjection,
+    mProjection,
+    mView
+  );
+  return mViewProjection;
+}
+
+/**
+ * Calculates the model-view-matrix of an object
+ * @param {WebGLObject} object
+ * @return {Float32Array} - The model view matrix
+ */
 function getModelViewMatrix(object) {
   let mView = this.getViewMatrix();
   let mModel = object.getModelMatrix();
@@ -6876,6 +7040,7 @@ var _transforms = Object.freeze({
 	getViewMatrix: getViewMatrix,
 	getProjectionMatrix: getProjectionMatrix,
 	getModelMatrix: getModelMatrix,
+	getViewProjectionMatrix: getViewProjectionMatrix,
 	getModelViewMatrix: getModelViewMatrix,
 	getNormalMatrix: getNormalMatrix,
 	getModelViewProjectionMatrix: getModelViewProjectionMatrix,
@@ -7140,8 +7305,10 @@ function renderObject(object) {
   let program = this.getActiveProgram();
   let buffers = object.buffers;
   let vClipPlane = this.clipPlane;
+  let hasRSMMap = object.rsmTexture !== null;
   let hasNormalMap = object.normalTexture !== null;
   let hasShadowMap = object.shadowTexture !== null;
+  hasShadowMap = false;
   let hasSpecularMap = object.specularTexture !== null;
   let useSpecularLighting = object.specularLighting;
   let useEnvironmentMapping = (
@@ -7185,6 +7352,9 @@ function renderObject(object) {
   // how to pull vertices
   {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
+    /*if (!program.isAttributeBufferEnabled(variables.aVertexPosition)) {
+      program.enableAttributeBuffer(variables.aVertexPosition, buffers.vertices, 3);
+    }*/
     gl.vertexAttribPointer(variables.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(variables.aVertexPosition);
   }
@@ -7238,6 +7408,7 @@ function renderObject(object) {
   }
   // send bools
   {
+    gl.uniform1f(variables.uHasRSMMap, hasRSMMap | 0);
     gl.uniform1f(variables.uIsLightSource, (object.light !== null) | 0);
     gl.uniform1f(variables.uHasNormalMap, hasNormalMap | 0);
     gl.uniform1f(variables.uHasShadowMap, hasShadowMap | 0);
@@ -7272,6 +7443,9 @@ function renderObject(object) {
     }
     if (useAmbientOcclusionMapping) {
       this.useTexture(object.ambientOcclusionTexture, variables.uAmbientOcclusionMap, 7);
+    }
+    if (hasRSMMap) {
+      this.useTexture(object.rsmTexture, variables.uRSMMap, 8);
     }
     if (useEnvironmentMapping) {
       this.useTexture(object.environmentTexture, variables.uEnvironmentMap, 10);
@@ -7358,6 +7532,17 @@ Water.prototype.init = function() {
   };
   this.reflectionTexture = renderer.createFrameBuffer(opts);
   this.refractionTexture = renderer.createFrameBuffer(opts);
+  this.refractionDepthTexture = renderer.createFrameBuffer({
+    width: 2048, height: 2048,
+    wrap: {
+      s: gl.REPEAT,
+      t: gl.REPEAT,
+      r: gl.REPEAT
+    },
+    attachments: [
+      { format: gl.DEPTH_COMPONENT32F, size: gl.FLOAT }
+    ]
+  });
 };
 
 /**
@@ -7405,6 +7590,26 @@ Water.prototype.bufferRefraction = function(cbDrawScene) {
   cbDrawScene(false, null, true, true);
   renderer.useCamera(camera);
   renderer.restoreFrameBuffer();
+  this.bufferRefractionDepth(cbDrawScene);
+};
+
+/**
+ * Buffer the scene into refraction part
+ * @param {Function} cbDrawScene - The scene draw function
+ */
+Water.prototype.bufferRefractionDepth = function(cbDrawScene) {
+  let gl = this.gl;
+  let renderer = this.renderer;
+  let refractionDepthTexture = this.refractionDepthTexture;
+  renderer.useFrameBuffer(refractionDepthTexture);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+  renderer.setClipPlane(0, 1, 0, -this.translate.y + 1.0);
+  renderer.useCamera(camera);
+  gl.colorMask(false, false, false, false);
+  if (window.terrain) renderer.renderObject(window.terrain);
+  gl.colorMask(true, true, true, true);
+  renderer.useCamera(camera);
+  renderer.restoreFrameBuffer();
 };
 
 /**
@@ -7436,12 +7641,17 @@ function renderPlane(object) {
   }
   // water related
   if (object instanceof Water) {
-    let dudvTexture = object.dudvTexture;
-    let normalTexture = object.normalTexture;
-    let reflectionTexture = object.reflectionTexture;
-    let refractionTexture = object.refractionTexture;
+    let {
+      dudvTexture,
+      depthTexture,
+      normalTexture,
+      reflectionTexture,
+      refractionTexture,
+      refractionDepthTexture
+    } = object;
     this.useTexture(reflectionTexture, variables.uReflectionTexture, 0);
     this.useTexture(refractionTexture, variables.uRefractionTexture, 1);
+    this.useTexture(refractionDepthTexture, variables.uRefractionDepthTexture, 1);
     this.useTexture(dudvTexture, variables.uDudvTexture, 2);
     this.useTexture(normalTexture, variables.uNormalTexture, 3);
   } else {
@@ -7767,15 +7977,16 @@ var _shadow_instanced = Object.freeze({
  */
 class WebGLRenderer {
   /**
-   * @param {Stage} stage
+   * @param {Object} opts
    * @constructor
    */
-  constructor(stage) {
+  constructor(opts = {}) {
     this.uid = uid();
-    this.stage = stage;
-    this.canvas = stage.canvas;
-    this.width = 0;
-    this.height = 0;
+    this.canvas = (
+      opts.canvas || document.createElement("canvas")
+    );
+    this.width = opts.width || this.canvas.width || 128;
+    this.height = opts.height || this.canvas.height || 128;
     this.frames = 0;
     this.frameCount = 0;
     this.drawCalls = 0;
@@ -7792,7 +8003,8 @@ class WebGLRenderer {
     this.programs = {};
     this.extensions = {};
     this.debug = {
-      FXAA: false,
+      glow: true,
+      FXAA: true,
       normals: false,
       boundings: false,
       wireframe: false
@@ -7820,10 +8032,12 @@ class WebGLRenderer {
     this.viewMatrix = mat4.create();
     this.modelMatrix = mat4.create();
     this.normalMatrix = mat4.create();
+    this.viewProjection = mat4.create();
     this.modelViewMatrix = mat4.create();
     this.projectionMatrix = mat4.create();
     this.modelViewProjectionMatrix = mat4.create();
     // create bounding box
+    this.vector = this.createVector();
     this.boundingBox = this.createObject(Cube);
     this.boundingBox.useColor([0, 0, 0, 255]);
     this.emptyTexture = this.createTexture().fromColor([0, 0, 0, 0]);
@@ -7833,12 +8047,10 @@ class WebGLRenderer {
     this.gBuffer = null;
     this.objects = [];
     // initialize default shaders
-    this.initPrograms().then(() => {
-      this.screen = this.createScreen();
-      this.gBuffer = this.createGBuffer();
-      this.loadExtensions();
-      this.ready = true;
-    });
+    this.screen = this.createScreen();
+    this.gBuffer = this.createGBuffer();
+    this.loadExtensions();
+    this.ready = true;
   }
 }
 
@@ -7847,6 +8059,7 @@ class WebGLRenderer {
  * @return {Quad}
  */
 WebGLRenderer.prototype.createScreen = function() {
+  let gl = this.gl;
   let screen = this.createObject(Quad);
   let fbo = this.createFrameBuffer({
     width: this.width,
@@ -7898,45 +8111,6 @@ WebGLRenderer.prototype.flush = function() {
 };
 
 /**
- * Initializes all shader programs
- * Afterwards the screen fbo is created
- */
-WebGLRenderer.prototype.initPrograms = function() {
-  let names = [
-    "skybox",
-    "water",
-    "terrain",
-    "object",
-    "object-shadow",
-    "instanced-object",
-    "instanced-object-shadow",
-    "animated-object",
-    "blur-filter",
-    "bright-filter",
-    "combine-filter",
-    "contrast",
-    "god-ray",
-    "quad",
-    "occlusion-filter",
-    "deferred/object",
-    "deferred/g-buffer",
-    "deferred/object-point-light",
-    "deferred/directional-light",
-    "deferred/water",
-    "deferred/terrain",
-    "FXAA",
-    "debug-normals"
-  ];
-  let programs = names.map(name => this.createProgram(name));
-  return new Promise(resolve => {
-    Promise.all(programs).then(results => {
-      results.map(program => this.programs[program.name] = program);
-      resolve();
-    });
-  });
-};
-
-/**
  * Indicates if an FBO is the main FBO
  * @param {FrameBuffer} fbo
  * @return {Boolean}
@@ -7954,7 +8128,15 @@ WebGLRenderer.prototype.isMainFrameBuffer = function(fbo) {
  * @return {Boolean}
  */
 WebGLRenderer.prototype.isProgramLoaded = function(name) {
-  return !!this.programs[name];
+  return !!this.programs[name] && this.programs[name].loaded;
+};
+
+/**
+ * Adds a program to the renderer
+ * @param {RendererProgram} program
+ */
+WebGLRenderer.prototype.addProgram = function(program) {
+  this.programs[program.name] = program;
 };
 
 /**
@@ -8292,6 +8474,28 @@ WebGLRenderer.prototype.getViewPosition = function(vec) {
 };
 
 /**
+ * Returns the given renderer program by name
+ * @param {String} name
+ */
+WebGLRenderer.prototype.getRendererProgramByPath = function(name) {
+  let programs = this.programs;
+  for (let key in programs) {
+    if (key === name) return programs[key];
+  }
+  return null;
+};
+
+/**
+ * Relaods the given shader program
+ * @param {String} name 
+ */
+WebGLRenderer.prototype.reloadRendererProgram = function(name) {
+  console.log(name);
+  let program = this.getRendererProgramByPath(name);
+  if (program !== null) program.reload();
+};
+
+/**
  * @param {Number} mode
  * @param {Number} first
  * @param {Number} count
@@ -8358,8 +8562,6 @@ WebGLRenderer.prototype.drawDebugNormals = function(object) {
   let variables = program.locations;
   let mModel = object.getModelMatrix();
   let mModelViewProjection = object.getModelViewProjectionMatrix();
-  gl.uniformMatrix4fv(variables.uMVPMatrix, false, mModelViewProjection);
-  gl.uniformMatrix4fv(variables.uModelMatrix, false, mModel);
   // vertex buffer -> debug normals
   {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.debugNormals);
@@ -8367,6 +8569,8 @@ WebGLRenderer.prototype.drawDebugNormals = function(object) {
     gl.enableVertexAttribArray(variables.aVertexPosition);
   }
   gl.uniform1f(variables.uDebugNormals, 1);
+  gl.uniform4fv(variables.uColor, new Float32Array([255, 0, 0, 255]));
+  gl.uniformMatrix4fv(variables.uTransformMatrix, false, mModelViewProjection);
   this.drawArrays(gl.LINES, 0, object.data.debugNormals.length / 3);
   gl.uniform1f(variables.uDebugNormals, 0);
   // reset, debug normals -> vertex buffer
@@ -8374,6 +8578,63 @@ WebGLRenderer.prototype.drawDebugNormals = function(object) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
     gl.vertexAttribPointer(variables.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(variables.aVertexPosition);
+  }
+  this.useRendererProgram(oprogram.name);
+};
+
+/**
+ * Renders a vector
+ * @param {Number} x1
+ * @param {Number} y1
+ * @param {Number} z1
+ * @param {Number} x2
+ * @param {Number} y2
+ * @param {Number} z2
+ * @param {Float32Array} color
+ */
+WebGLRenderer.prototype.drawVector = function(x1, y1, z1, x2, y2, z2, color) {
+  let gl = this.gl;
+  let oprogram = this.getActiveProgram();
+  let program = this.useRendererProgram("debug-normals");
+  let vector = this.vector;
+  let vertices = vector.data.vertices;
+  let buffers = vector.buffers;
+  let variables = program.locations;
+  let mViewProjection = this.getViewProjectionMatrix();
+  let isRefreshNeeded = (
+    (vertices[0] !== x1) ||
+    (vertices[1] !== y1) ||
+    (vertices[2] !== z1) ||
+    (vertices[3] !== x2) ||
+    (vertices[4] !== y2) ||
+    (vertices[5] !== z2)
+  );
+  // fill only if necessary
+  if (isRefreshNeeded) {
+    vertices[0] = x1;
+    vertices[1] = y1;
+    vertices[2] = z1;
+    vertices[3] = x2;
+    vertices[4] = y2;
+    vertices[5] = z2;
+  }
+  // trigger buffer refresh
+  if (isRefreshNeeded) vector.refresh();
+  // how to pull vertices
+  {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertices);
+    gl.vertexAttribPointer(variables.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(variables.aVertexPosition);
+  }
+  // send uniforms
+  {
+    gl.uniform1f(variables.uTime, this.frames);
+    gl.uniform4fv(variables.uColor, color || new Float32Array([255, 0, 0, 255]));
+    gl.uniformMatrix4fv(variables.uTransformMatrix, false, mViewProjection);
+  }
+  // draw
+  {
+    this.drawArrays(gl.LINES, 0, 6 / 3);
   }
   this.useRendererProgram(oprogram.name);
 };
@@ -9497,7 +9758,7 @@ class FreeCamera extends Camera {
       rotate: null,
       translate: null
     };
-    this.positionSpeed = 128;
+    this.positionSpeed = 48;
     this.rotationSpeed = 0.01;
   }
 }
@@ -9530,7 +9791,7 @@ FreeCamera.prototype.control = function(dt, move, mx, my) {
   this.move(dir);
   // if we follow an entity then we don't allow moving below the terrain
   if (this.target.translate) {
-    let terrainY = terrain.getHeightAt(this.position[0], this.position[2]);
+    let terrainY = terrain.getHeightAt(this.position[0], this.position[1], this.position[2]);
     if (this.position[1] > terrainY - 2.0) {
       this.position[1] = terrainY - 2.0;
     }
@@ -9619,7 +9880,7 @@ FreeCamera.prototype.update = function(delta) {
   // translation target
   if (tTarget && window.terrain) {
     let position = vec3.clone(tTarget.translate.toArray());
-    let minDist = 100.0;
+    let minDist = 150.0;
     let theta = tTarget.rotate.z;
     let hDist = minDist * Math.cos(this.rotation[0]);
     let posX = hDist * Math.sin(theta * Math.PI / 180);
@@ -9643,14 +9904,18 @@ FreeCamera.prototype.update = function(delta) {
 class Stage {
   constructor(canvas) {
     this.canvas = canvas;
-    this.renderer = new WebGLRenderer(this);
+    this.renderer = new WebGLRenderer({
+      canvas: canvas,
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
     this.renderer.resize();
     window.renderer = this.renderer;
     window.gl = renderer.gl;
     window.camera = renderer.createCamera(FreeCamera);
     renderer.camera = camera;
-    camera.position = new Float32Array([15.0, -20.0, 40.0]);
-    camera.rotation = new Float32Array([0.5, 0.3, 0.0]);
+    camera.position = new Float32Array([25.0, -85.0, 30.0]);
+    camera.rotation = new Float32Array([0.0, 0.75, 0]);
     window.objects = renderer.objects;
     /*{
       renderer.createColladaFile().fromPath("fennekin2.dae").then(object => {
@@ -9666,7 +9931,7 @@ class Stage {
       renderer.createObjectFile().fromPath("abra.obj").then(base => {
         let texture1 = renderer.createTexture().fromImagePath("abra.png");
         base.useTexture(texture1);
-        for (let ii = 0; ii < 1; ++ii) {
+        for (let ii = 0; ii < 10; ++ii) {
           let obj = renderer.createObject(Cube, { inherit: base });
           obj.translate.set(100, 0, 150);
           obj.rotate.x = 180;
@@ -9736,24 +10001,40 @@ class Stage {
       water.scale.set(1024);
       water.translate.set(-size[0], size[1], -size[2]);
       water.useColor([0, 0, 255]);
-      water.translate.y = 10;
+      water.translate.y = 10000;
       water.rotate.x = 90;
       water.useDUDVTexture(renderer.createTexture().fromImagePath("dudv.png"));
       water.useNormalMap(renderer.createTexture().fromImagePath("water-normal.png"));
       window.water = water;
+    }
+    // test sphere
+    {
+      renderer.createObjectFile().fromPath("sphere_perfect.obj").then(obj => {
+        obj.useTexture(renderer.createTexture().fromImagePath("rustediron2_albedo.png"));
+        obj.useNormalMap(renderer.createTexture().fromImagePath("rustediron2_normal.png"));
+        obj.useRSMMap(renderer.createTexture().fromRSM({
+          R: "rustediron2_roughness.png",
+          S: "rustediron2_roughness.png",
+          M: "rustediron2_metallic.png"
+        }));
+        obj.translate.y = -60;
+        obj.scale.set(10);
+        objects.push(obj);
+        window.sphere = obj;
+      });
     }
     // terrain
     {
       let obj = renderer.createObject(Terrain);
       obj.useColor([255, 191, 111]);
       obj.scale.set(1);
-      obj.translate.set(-1000, 0, -1000);
-      obj.useTexture(renderer.createTexture().fromImagePath("md5/pokepark/map1/Fd_nh_tuchi01.png"));
-      /*obj.useNormalMap(renderer.createTexture().fromImagePath("mossy-ground1-normal.png"));
+      obj.translate.set(-1000, 10000, -1000);
+      //obj.useTexture(renderer.createTexture().fromImagePath("md5/pokepark/map1/Fd_nh_tuchi01.png"));
+      obj.useTexture(renderer.createTexture().fromImagePath("mossy-ground1-albedo.png"));
+      obj.useNormalMap(renderer.createTexture().fromImagePath("mossy-ground1-normal.png"));
       obj.useMetalnessMap(renderer.createTexture().fromImagePath("mossy-ground1-metal.png"));
       obj.useRoughnessMap(renderer.createTexture().fromImagePath("mossy-ground1-roughness.png"));
-      obj.useAmbientOcclusionMap(renderer.createTexture().fromImagePath("mossy-ground1-ao.png"));
-      obj.useSpecularMap(renderer.createTexture().fromImagePath("mossy-ground1-specular.png"));*/
+      obj.useSpecularMap(renderer.createTexture().fromImagePath("mossy-ground1-specular.png"));
       //obj.useAmbientOcclusionMap(renderer.createTexture().fromImagePath("terrain-1-ao.png"));
       window.terrain = obj;
     }
@@ -9850,6 +10131,27 @@ class Stage {
         }, 1e3);
       });
     }*/
+    {
+      renderer.createObjectFile().fromPath("alien.obj").then(obj => {
+        let opts = { mips: false };
+        obj.useTexture(renderer.createTexture(opts).fromImagePath("alien-diffuse.jpg"));
+        obj.useNormalMap(renderer.createTexture(opts).fromImagePath("alien-normal.jpg"));
+        obj.useMetalnessMap(renderer.createTexture(opts).fromImagePath("alien-metalness.jpg"));
+        obj.useRoughnessMap(renderer.createTexture(opts).fromImagePath("alien-roughness.jpg"));
+        obj.useAmbientOcclusionMap(renderer.createTexture(opts).fromImagePath("alien-ao.jpg"));
+        obj.useEmissiveMap(renderer.createTexture(opts).fromImagePath("alien-emissive.jpg"));
+        obj.translate.set(0, -80, 0);
+        obj.scale.set(16);
+        obj.rotate.x = 180;
+        obj.rotate.y = 180;
+        obj.specularLighting = true;
+        objects.push(obj);
+        setTimeout(() => {
+          obj.environmentMapping = true;
+        }, 1e3);
+        window.alien = obj;
+      });
+    }
     /*setTimeout(() => {
       renderer.createObjectFile().fromPath("tree_stem.obj").then(obj => {
         obj.useTexture(renderer.createTexture().fromImagePath("tree_stem.jpg"));
@@ -10038,12 +10340,34 @@ class Stage {
         window.stone = obj;
       });
     }*/
+    // cube with shadow
+    /*{
+      renderer.createObjectFile().fromPath("sphere1.obj").then(base => {
+        base.useColor([255, 255, 255]);
+        //base.useTexture(renderer.createTexture().fromImagePath("gold-diffuse.jpg"));
+        //base.useNormalMap(renderer.createTexture().fromImagePath("gold-normal.jpg"));
+        for (let ii = 0; ii < 15; ++ii) {
+          let obj = renderer.createObject(Cube, { inherit: base });
+          obj.translate.set(
+            Math.random() * 300,
+            Math.random() * -100 - 50,
+            Math.random() * 300
+          );
+          obj.scale.set(24);
+          obj.specularLighting = true;
+          objects.push(obj);
+          setTimeout(() => {
+            obj.environmentMapping = true;
+          }, 1e3);
+        };
+      });
+    }*/
     // sun
     {
-      renderer.createObjectFile().fromPath("sphere.obj").then(obj => {
+      renderer.createObjectFile().fromPath("sphere9.obj").then(obj => {
         let radius = 350.0;
         obj.useColor([0, 0, 0, 0]);
-        obj.translate.set(0, -75, 100);
+        obj.translate.set(0, -200, -25);
         obj.scale.set(1);
         obj.light = renderer.createLight({
           radius: radius,
@@ -10055,7 +10379,7 @@ class Stage {
       });
     }
     {
-      renderer.createObjectFile().fromPath("sphere.obj").then(base => {
+      renderer.createObjectFile().fromPath("sphere9.obj").then(base => {
         let radius = 250.0;
         for (let ii = 0; ii < 0; ++ii) {
           let obj = renderer.createObject(Cube, { inherit: base });
@@ -10214,6 +10538,13 @@ class Stage {
       });
       window.blurFilter3 = filter;
     }
+    {
+      let filter = renderer.createFilter({
+        width: renderer.width,
+        height: renderer.height
+      });
+      window.bloomFilter = filter;
+    }
     /*{
       renderer.createColladaFile().fromPath("StanfordDragon.dae").then(object => {
         object.useTexture(renderer.createTexture().fromColor([128, 128, 128]));
@@ -10242,8 +10573,47 @@ class Stage {
         objects.push(object);
       });
     }*/
-    requestAnimationFrame(drawLoop);
+    initPrograms().then(() => {
+      requestAnimationFrame(drawLoop);
+    });
   }
+}
+
+function initPrograms() {
+  let names = [
+    "skybox",
+    "water",
+    "terrain",
+    "object",
+    "object-shadow",
+    "instanced-object",
+    "instanced-object-shadow",
+    "animated-object",
+    "blur-filter",
+    "bloom-filter",
+    "bright-filter",
+    "combine-filter",
+    "contrast",
+    "god-ray",
+    "quad",
+    "occlusion-filter",
+    "deferred/object",
+    "deferred/g-buffer",
+    "deferred/object-point-light",
+    "deferred/directional-light",
+    "deferred/water",
+    "deferred/terrain",
+    "FXAA",
+    "debug-normals",
+    "deferred/anime-water"
+  ];
+  let programs = names.map(name => renderer.createProgram(`../shaders/`, name));
+  return new Promise(resolve => {
+    Promise.all(programs).then(results => {
+      results.map(program => renderer.addProgram(program));
+      resolve();
+    });
+  });
 }
 
 function applyBlur(input, attachement) {
@@ -10253,16 +10623,16 @@ function applyBlur(input, attachement) {
   {
     // apply h-blur
     {
-      let program = blurFilter.useFilter("blur-filter");
+      let program = blurFilter.useProgram("blur-filter");
       gl.uniform2fv(program.locations.uDirection, [1, 0]);
-      blurFilter.applyFilter();
+      blurFilter.apply();
     }
     blurFilter.reuse();
     // apply v-blur
     {
-      let program = blurFilter.useFilter("blur-filter");
+      let program = blurFilter.useProgram("blur-filter");
       gl.uniform2fv(program.locations.uDirection, [0, 1]);
-      blurFilter.applyFilter();
+      blurFilter.apply();
     }
   }
   blurFilter2.enable();
@@ -10271,16 +10641,16 @@ function applyBlur(input, attachement) {
   {
     // apply h-blur
     {
-      let program = blurFilter2.useFilter("blur-filter");
+      let program = blurFilter2.useProgram("blur-filter");
       gl.uniform2fv(program.locations.uDirection, [1, 0]);
-      blurFilter2.applyFilter();
+      blurFilter2.apply();
     }
     blurFilter2.reuse();
     // apply v-blur
     {
-      let program = blurFilter2.useFilter("blur-filter");
+      let program = blurFilter2.useProgram("blur-filter");
       gl.uniform2fv(program.locations.uDirection, [0, 1]);
-      blurFilter2.applyFilter();
+      blurFilter2.apply();
     }
   }
   blurFilter3.enable();
@@ -10289,16 +10659,16 @@ function applyBlur(input, attachement) {
   {
     // apply h-blur
     {
-      let program = blurFilter3.useFilter("blur-filter");
+      let program = blurFilter3.useProgram("blur-filter");
       gl.uniform2fv(program.locations.uDirection, [1, 0]);
-      blurFilter3.applyFilter();
+      blurFilter3.apply();
     }
     blurFilter3.reuse();
     // apply v-blur
     {
-      let program = blurFilter3.useFilter("blur-filter");
+      let program = blurFilter3.useProgram("blur-filter");
       gl.uniform2fv(program.locations.uDirection, [0, 1]);
-      blurFilter3.applyFilter();
+      blurFilter3.apply();
     }
   }
   return blurFilter3;
@@ -10331,7 +10701,8 @@ function draw() {
       debug_wireframe.innerHTML = `[F1] Wireframe: ${dbg.wireframe ? yes : no}`;
       debug_boundings.innerHTML = `[F2] Boundings: ${dbg.boundings ? yes : no}`;
       debug_FXAA.innerHTML = `[F3] FXAA: ${dbg.FXAA ? yes : no}`;
-      debug_normals.innerHTML = `[F4] Normals: ${dbg.normals ? yes : no}`;
+      debug_glow.innerHTML = `[F4] Glow: ${dbg.glow ? yes : no}`;
+      debug_normals.innerHTML = `[F6] Normals: ${dbg.normals ? yes : no}`;
     }
     {
       let total = 0;
@@ -10343,13 +10714,13 @@ function draw() {
   }
   delta = now - last;
   // bloom
-  if (window.rofl) {
+  if (renderer.debug.glow) {
     filter.enable(true);
-    filter.readFrameBuffer(gBuffer, gl.COLOR_ATTACHMENT4);
+    filter.readFrameBuffer(gBuffer, gl.COLOR_ATTACHMENT3);
     let blur = applyBlur(filter.input, gl.COLOR_ATTACHMENT0);
     renderer.useFrameBuffer(renderer.screen.texture);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.blendFunc(gl.ONE, gl.ONE);
     blur.flush();
     gl.disable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE);
@@ -10382,10 +10753,11 @@ function drawSkyBox() {
 }
 
 function drawPointLights() {
+  let screen = renderer.screen;
   let gBuffer = renderer.gBuffer;
   // write depth into screen fbo
-  gBuffer.writeToFrameBuffer(renderer.screen.texture, null, gl.DEPTH_BUFFER_BIT);
-  renderer.useFrameBuffer(renderer.screen.texture);
+  gBuffer.writeToFrameBuffer(screen.texture, null, gl.DEPTH_BUFFER_BIT);
+  renderer.useFrameBuffer(screen.texture);
   // lighting
   {
     let program = renderer.useRendererProgram("deferred/object-point-light");
@@ -10438,6 +10810,17 @@ function drawPointLights() {
     gl.depthMask(true);
     gl.disable(gl.STENCIL_TEST);
     gl.depthFunc(gl.LEQUAL);
+  }
+  // read brightness, apply bloom
+  {
+    bloomFilter.enable();
+    bloomFilter.readFrameBuffer(screen.texture, gl.COLOR_ATTACHMENT1);
+    let blur = applyBlur(bloomFilter.input, gl.COLOR_ATTACHMENT0);
+    renderer.useFrameBuffer(screen.texture);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    blur.flush();
+    gl.disable(gl.BLEND);
   }
 }
 
@@ -10656,15 +11039,6 @@ setInterval(() => {
   }
 }, 250);
 
-setInterval(() => {
-  objects.map(object => {
-    if (!object.light) return;
-    //object.translate.y += Math.sin(renderer.frames * 0.00125) * 0.125;
-    object.translate.x += Math.cos(renderer.frames * 0.00120) * 0.5;
-    object.translate.z += Math.sin(renderer.frames * 0.00120) * 0.5;
-  });
-});
-
 window.keys = {};
 let isKeyPressed = (key) => keys[key] || keys[key.toLowerCase()] || keys[key.toUpperCase()];
 window.onkeydown = (e) => onKeyDown(e);
@@ -10686,6 +11060,10 @@ function onKeyDown(e) {
     renderer.debug.FXAA = !renderer.debug.FXAA;
   }
   if (e.key === "F4") {
+    e.preventDefault();
+    renderer.debug.glow = !renderer.debug.glow;
+  }
+  if (e.key === "F6") {
     e.preventDefault();
     renderer.debug.normals = !renderer.debug.normals;
   }

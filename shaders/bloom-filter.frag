@@ -19,7 +19,5 @@ void main() {
       sum += texture(uSampler, vTextureCoord + offset);
     }
   };
-  color = (sum / 30.0) + color;
-  fragColor = color;
-
+  fragColor = color + sum;
 }
