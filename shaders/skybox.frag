@@ -13,7 +13,7 @@ const vec3 directionalLightColor = vec3(150, 80, 50) / 512.0;
 
 void main(void) {
   vec4 color = texture(uSkyCube, vTextureCoord);
-  color = vec4(32) / 255.0;
+  //color = vec4(32) / 255.0;
   color.rgb *= (ambientLight + directionalLightColor) * 1.1;
   fragColor = color;
 }

@@ -85,7 +85,7 @@ float shadowCalculation(vec4 fragPosLightSpace, float bias) {
 }
 
 void main(void) {
-  vec4 rsma = vec4(0.0);
+  vec4 rsma = vec4(0.0, 0.0, 0.0, 1.0);
   vec4 color = vec4(0.0);
   vec4 emissive = vec4(0.0);
   vec4 envColor = vec4(0.0);
@@ -146,7 +146,7 @@ void main(void) {
     rsma.w = (
       uHasAmbientOcclusionMap ?
       texture(uAmbientOcclusionMap, texCoord).r :
-      0.0
+      1.0
     );
   // use joined RSM map
   } else {

@@ -8003,7 +8003,7 @@ class WebGLRenderer {
     this.programs = {};
     this.extensions = {};
     this.debug = {
-      glow: true,
+      glow: false,
       FXAA: true,
       normals: false,
       boundings: false,
@@ -9158,9 +9158,8 @@ Terrain.prototype.calculateNormal = function(x, y, heights) {
   let d = heights[clamp(((y - 1) * VERTEX_COUNT) + x, 0, length)];
   let u = heights[clamp(((y + 1) * VERTEX_COUNT) + x, 0, length)];
   let norm = vec3.create();
-  vec3.set(norm, (l - r), 1.0, (d - u));
+  vec3.set(norm, (l - r), -10, (d - u));
   vec3.normalize(norm, norm);
-  norm[1] *= -1;
   return norm;
 };
 
@@ -10028,14 +10027,17 @@ class Stage {
       let obj = renderer.createObject(Terrain);
       obj.useColor([255, 191, 111]);
       obj.scale.set(1);
-      obj.translate.set(-1000, 10000, -1000);
+      obj.translate.set(-1000, 100000, -1000);
       //obj.useTexture(renderer.createTexture().fromImagePath("md5/pokepark/map1/Fd_nh_tuchi01.png"));
       obj.useTexture(renderer.createTexture().fromImagePath("mossy-ground1-albedo.png"));
       obj.useNormalMap(renderer.createTexture().fromImagePath("mossy-ground1-normal.png"));
       obj.useMetalnessMap(renderer.createTexture().fromImagePath("mossy-ground1-metal.png"));
       obj.useRoughnessMap(renderer.createTexture().fromImagePath("mossy-ground1-roughness.png"));
       obj.useSpecularMap(renderer.createTexture().fromImagePath("mossy-ground1-specular.png"));
-      //obj.useAmbientOcclusionMap(renderer.createTexture().fromImagePath("terrain-1-ao.png"));
+      //obj.useAmbientOcclusionMap(renderer.createTexture().fromColor([255,255,255]));
+      setTimeout(() => {
+        obj.environmentMapping = true;
+      }, 1e3);
       window.terrain = obj;
     }
     // test blender object
@@ -10459,7 +10461,7 @@ class Stage {
     {
       let obj = renderer.createObject(Cube);
       let cubemap = renderer.createCubeMap().fromImages(
-        "skybox-anime2/",
+        "skybox-galaxy/",
         ["left", "right", "bottom", "top", "back", "front"]
       );
       obj.useEnvironmentMap(cubemap);
@@ -10812,7 +10814,7 @@ function drawPointLights() {
     gl.depthFunc(gl.LEQUAL);
   }
   // read brightness, apply bloom
-  {
+  /*{
     bloomFilter.enable();
     bloomFilter.readFrameBuffer(screen.texture, gl.COLOR_ATTACHMENT1);
     let blur = applyBlur(bloomFilter.input, gl.COLOR_ATTACHMENT0);
@@ -10821,7 +10823,7 @@ function drawPointLights() {
     gl.blendFunc(gl.ONE, gl.ONE);
     blur.flush();
     gl.disable(gl.BLEND);
-  }
+  }*/
 }
 
 function drawDirectionalLight() {

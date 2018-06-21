@@ -16,7 +16,7 @@ out vec4 fragColor;
 const float ALPHA_TRESHOLD = 0.004;
 
 const vec3 ambientLight = vec3(255) / 255.0;
-const vec3 directionalLightColor = vec3(150, 85, 60) / 255.0;
+const vec3 directionalLightColor = vec3(150, 85, 65) / 255.0;
 const float PI = 3.141592653589793;
 
 float BRDF_D_GGX(float NdotH, float roughness) {
