@@ -11141,6 +11141,10 @@ setInterval(() => {
   locked = document.pointerLockElement === canvas;
 }, 1e3 / 10);
 
+setInterval(() => {
+  if (window.alien) alien.rotate.y += 0.125;
+});
+
 window.stage = new Stage(canvas);
 window.onresize = () => {
   let width = window.innerWidth;
