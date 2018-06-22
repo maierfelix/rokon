@@ -4,7 +4,7 @@ This is a hybrid JavaScript/WebAssembly 3D engine using WebGL2. It's using [glmw
 
 [Demo](https://maierfelix.github.io/rokon/static/index.html)
 
-<img src="https://github.com/maierfelix/rokon/blob/master/screenshots/4.gif?raw=true" width="50%">
+<img src="https://github.com/maierfelix/rokon/blob/master/screenshots/5.gif?raw=true" width="50%">
 <img src="https://github.com/maierfelix/rokon/blob/master/screenshots/3.gif?raw=true" width="50%">
 
 Features:
