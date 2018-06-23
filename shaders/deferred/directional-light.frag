@@ -16,7 +16,7 @@ out vec4 fragColor;
 const float ALPHA_TRESHOLD = 0.004;
 
 const vec3 ambientLight = vec3(255) / 255.0;
-const vec3 directionalLightColor = vec3(150, 80, 50) / 255.0;
+const vec3 directionalLightColor = vec3(130, 110, 100) / 255.0;
 const float PI = 3.141592653589793;
 
 float BRDF_D_GGX(float NdotH, float roughness) {
@@ -27,7 +27,7 @@ float BRDF_D_GGX(float NdotH, float roughness) {
 }
 
 vec3 BRDF_F_FresnelSchlick(float VdotH, vec3 F0) {
-  return (F0 + (1.0 - F0) * (pow(1.5 - max(VdotH, 0.0), 5.0)));
+  return (F0 + (1.0 - F0) * (pow(1.0 - max(VdotH, 0.0), 5.0)));
 }
 
 float BRDF_G_SchlickGGX(float NdotV, float roughness) {
@@ -50,7 +50,7 @@ float calcAttenuation(float distToFragment, float lightRadius) {
 void main(void) {
   ivec2 fragCoord = ivec2(gl_FragCoord.xy);
 
-  float lightIntensity = 8.0;
+  float lightIntensity = 6.0;
   float lightRadius = 100000000000.0;
 
   vec3 position = texelFetch(uPositionSampler, fragCoord, 0).xyz;
@@ -74,19 +74,19 @@ void main(void) {
   vec3 V = normalize(uCameraPosition - position); //eye vector
   vec3 H = normalize(L + V); //half vector
 
-  float NdotH = max(dot(N, H), 0.0);
-  float NdotV = max(dot(N, V), 0.0);
-  float NdotL = max(dot(N, L), 0.0);
-  float VdotH = max(dot(V, H), 0.0);
+  float NdotH = clamp(dot(N, H), 0.0, 1.0);
+  float NdotV = clamp(dot(N, V), 0.0, 1.0);
+  float NdotL = clamp(dot(N, L), 0.0, 1.0);
+  float VdotH = clamp(dot(V, H), 0.0, 1.0);
 
   //------------------
 
-  vec3 F0 = vec3(1.0 - rsma.w);
-  //F0 = mix(F0, albedo, metalness);
+  vec3 F0 = vec3(0.475);
+  F0 = mix(F0, albedo, metalness);
 
   float D = BRDF_D_GGX(NdotH, roughness); //normal distribution
   float G = BRDF_G_Smith(NdotV, NdotL, roughness); //geometric shadowing
-  vec3 F = BRDF_F_FresnelSchlick(VdotH, F0); // Fresnel
+  vec3 F = BRDF_F_FresnelSchlick(VdotH, F0); // fresnel
 
   vec3 specular = ((D * F * G) / max(4.0 * NdotL * NdotV, 0.001));
   //------light----------
@@ -98,14 +98,15 @@ void main(void) {
   vec3 kS = F;
   vec3 kD = 1.0 - kS;
 
-  vec3 diffuse = (albedo * ao) * lightIntensity * kD / PI;
+  vec3 diffuse = (albedo) * lightIntensity * kD / PI;
   vec3 color = ((diffuse + specular) * (radiance) * NdotL) * rsma.w + (emissive);
 
-  vec3 brightness = (specular * radiance * NdotL) * 1.125 * lightIntensity * kD / PI;
+  vec3 brightness = (specular * radiance * NdotL) * 1.25 * lightIntensity * kD / PI;
 
   float diffuseLighting = max(dot(N, normalize(uLightPosition)), 0.5);
 
   color *= (ambientLight + directionalLightColor) * diffuseLighting;
+  color *= ao;
   fragColor = vec4(color, 1.0);
 
 }

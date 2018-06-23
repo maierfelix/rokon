@@ -28,7 +28,7 @@ float BRDF_D_GGX(float NdotH, float roughness) {
 }
 
 vec3 BRDF_F_FresnelSchlick(float VdotH, vec3 F0) {
-  return (F0 + (1.0 - F0) * (pow(1.5 - max(VdotH, 0.0), 5.0)));
+  return (F0 + (1.0 - F0) * (pow(1.0 - max(VdotH, 0.0), 5.0)));
 }
 
 float BRDF_G_SchlickGGX(float NdotV, float roughness) {
@@ -89,8 +89,8 @@ void main(void) {
 
   //------------------
 
-  vec3 F0 = vec3(rsma.z * 2.75);
-  //F0 = mix(F0, albedo, metalness);
+  vec3 F0 = vec3(0.475);
+  F0 = mix(F0, albedo, metalness);
 
   float D = BRDF_D_GGX(NdotH, roughness); //normal distribution
   float G = BRDF_G_Smith(NdotV, NdotL, roughness); //geometric shadowing
@@ -104,15 +104,15 @@ void main(void) {
   //-----------
 
   vec3 kS = F;
-  vec3 kD = vec3(1.0) - kS;
-  kD *= 1.0 - metalness;
+  vec3 kD = 1.0 - kS;
 
-  vec3 diffuse = (albedo * ao) * uLightIntensity * kD / PI;
+  vec3 diffuse = (albedo) * uLightIntensity * kD / PI;
   vec3 color = ((diffuse + specular) * (radiance) * NdotL) * rsma.w + (emissive);
 
   vec3 brightness = (specular * radiance * NdotL) * 1.25 * uLightIntensity * kD / PI;
 
+  color *= ao;
   fragColor = vec4(color, 1.0);
-  brightLevel = brightness * 1.5;
+  brightLevel = brightness * 0.5;
 
 }

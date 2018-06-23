@@ -40,6 +40,7 @@ uniform bool uHasSpecularLighting;
 uniform bool uHasEnvironmentMap;
 uniform bool uHasMetalnessMap;
 uniform bool uHasRoughnessMap;
+uniform bool uHasDisplacementMap;
 uniform bool uHasAmbientOcclusionMap;
 
 uniform vec4 uFogColor;
@@ -54,6 +55,7 @@ uniform sampler2D uSpecularMap;
 uniform sampler2D uEmissiveMap;
 uniform sampler2D uMetalnessMap;
 uniform sampler2D uRoughnessMap;
+uniform sampler2D uDisplacementMap;
 uniform sampler2D uAmbientOcclusionMap;
 uniform samplerCube uEnvironmentMap;
 
@@ -85,7 +87,7 @@ float shadowCalculation(vec4 fragPosLightSpace, float bias) {
 }
 
 void main(void) {
-  vec4 rsma = vec4(0.0);
+  vec4 rsma = vec4(0.0, 0.0, 0.0, 1.0);
   vec4 color = vec4(0.0);
   vec4 emissive = vec4(0.0);
   vec4 envColor = vec4(0.0);
@@ -114,6 +116,7 @@ void main(void) {
     vec4 refractColor = texture(uEnvironmentMap, refract(view, normal, refractRatio));
     vec4 environmentColor = mix(reflectColor, refractColor, 1.5);
     envColor = environmentColor * 1.0;
+    color = mix(color, color * envColor, 0.5);
   }
   // shadow mapping
   lightFactor = (
@@ -128,7 +131,7 @@ void main(void) {
     rsma.x = (
       uHasRoughnessMap ?
       texture(uRoughnessMap, texCoord).r :
-      0.0
+      1.0
     );
     // specular
     rsma.y = (
@@ -146,7 +149,7 @@ void main(void) {
     rsma.w = (
       uHasAmbientOcclusionMap ?
       texture(uAmbientOcclusionMap, texCoord).r :
-      0.0
+      1.0
     );
   // use joined RSM map
   } else {
@@ -165,8 +168,6 @@ void main(void) {
     texture(uEmissiveMap, texCoord) :
     vec4(0.0)
   );
-  // environment color
-  //color = (envColor) * 1.25;
   // apply fog
   {
     //color = mix(color, uFogColor / 255.0, 1.0 - vVisibility);

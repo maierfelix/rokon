@@ -93,7 +93,7 @@ RendererProgram.prototype.buildShaderProgram = function(vertexSrc, fragmentSrc) 
  */
 RendererProgram.prototype.reload = function() {
   this.build(this.path, this.name).then(ready => {
-    console.info(`Reloaded shader ${name}`);
+    console.info(`Reloaded shader ${this.name}`);
   });
 };
 

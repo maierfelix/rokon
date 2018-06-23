@@ -8,11 +8,10 @@ export function renderObject(object) {
   let program = this.getActiveProgram();
   let buffers = object.buffers;
   let vClipPlane = this.clipPlane;
-  let hasRSMMap = object.rsmTexture !== null;
-  let hasNormalMap = object.normalTexture !== null;
-  let hasShadowMap = object.shadowTexture !== null;
-  hasShadowMap = false;
-  let hasSpecularMap = object.specularTexture !== null;
+  let useRSMMap = object.rsmTexture !== null;
+  let useNormalMapping = object.normalTexture !== null;
+  let useShadowMapping = object.shadowTexture !== null;
+  let useSpecularMapping = object.specularTexture !== null;
   let useSpecularLighting = object.specularLighting;
   let useEnvironmentMapping = (
     object.environmentMapping && object.environmentTexture !== null
@@ -20,6 +19,7 @@ export function renderObject(object) {
   let useEmissiveMapping = object.emissiveTexture !== null;
   let useMetalnessMapping = object.metalnessTexture !== null;
   let useRoughnessMapping = object.roughnessTexture !== null;
+  let useDisplacementMapping = object.displacementTexture !== null;
   let useAmbientOcclusionMapping = object.ambientOcclusionTexture !== null;
   let variables = program.locations;
   let vCameraPosition = camera.position;
@@ -97,7 +97,7 @@ export function renderObject(object) {
     gl.uniformMatrix4fv(variables.uNormalMatrix, false, mNormal);
     gl.uniformMatrix4fv(variables.uModelViewMatrix, false, mModelView);
     gl.uniformMatrix4fv(variables.uMVPMatrix, false, mModelViewProjection);
-    if (hasShadowMap) {
+    if (useShadowMapping) {
       gl.uniformMatrix4fv(variables.uLightSpaceMatrix, false, object.lightSpaceMatrix);
     }
     gl.uniform4fv(variables.uClipPlane, vClipPlane);
@@ -111,28 +111,29 @@ export function renderObject(object) {
   }
   // send bools
   {
-    gl.uniform1f(variables.uHasRSMMap, hasRSMMap | 0);
+    gl.uniform1f(variables.uHasRSMMap, useRSMMap | 0);
     gl.uniform1f(variables.uIsLightSource, (object.light !== null) | 0);
-    gl.uniform1f(variables.uHasNormalMap, hasNormalMap | 0);
-    gl.uniform1f(variables.uHasShadowMap, hasShadowMap | 0);
-    gl.uniform1f(variables.uHasSpecularMap, hasSpecularMap | 0);
+    gl.uniform1f(variables.uHasNormalMap, useNormalMapping | 0);
+    gl.uniform1f(variables.uHasShadowMap, useShadowMapping | 0);
+    gl.uniform1f(variables.uHasSpecularMap, useSpecularMapping | 0);
     gl.uniform1f(variables.uHasEmissiveMap, useEmissiveMapping | 0);
     gl.uniform1f(variables.uHasSpecularLighting, useSpecularLighting | 0);
     gl.uniform1f(variables.uHasEnvironmentMap, useEnvironmentMapping | 0);
     gl.uniform1f(variables.uHasMetalnessMap, useMetalnessMapping | 0);
     gl.uniform1f(variables.uHasRoughnessMap, useRoughnessMapping | 0);
+    gl.uniform1f(variables.uHasDisplacementMap, useDisplacementMapping | 0);
     gl.uniform1f(variables.uHasAmbientOcclusionMap, useAmbientOcclusionMapping | 0);
   }
   // texture
   {
     this.useTexture(object.texture, variables.uSampler, 0);
-    if (hasNormalMap) {
+    if (useNormalMapping) {
       this.useTexture(object.normalTexture, variables.uNormalMap, 1);
     }
-    if (hasShadowMap) {
+    if (useShadowMapping) {
       this.useTexture(object.shadowTexture, variables.uShadowMap, 2);
     }
-    if (hasSpecularMap) {
+    if (useSpecularMapping) {
       this.useTexture(object.specularTexture, variables.uSpecularMap, 3);
     }
     if (useEmissiveMapping) {
@@ -144,11 +145,14 @@ export function renderObject(object) {
     if (useRoughnessMapping) {
       this.useTexture(object.roughnessTexture, variables.uRoughnessMap, 6);
     }
-    if (useAmbientOcclusionMapping) {
-      this.useTexture(object.ambientOcclusionTexture, variables.uAmbientOcclusionMap, 7);
+    if (useDisplacementMapping) {
+      this.useTexture(object.displacementTexture, variables.uDisplacementMap, 7);
     }
-    if (hasRSMMap) {
-      this.useTexture(object.rsmTexture, variables.uRSMMap, 8);
+    if (useAmbientOcclusionMapping) {
+      this.useTexture(object.ambientOcclusionTexture, variables.uAmbientOcclusionMap, 8);
+    }
+    if (useRSMMap) {
+      this.useTexture(object.rsmTexture, variables.uRSMMap, 9);
     }
     if (useEnvironmentMapping) {
       this.useTexture(object.environmentTexture, variables.uEnvironmentMap, 10);

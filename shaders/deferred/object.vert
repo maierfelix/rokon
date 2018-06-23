@@ -34,6 +34,7 @@ uniform vec3 uLightViewPosition;
 uniform bool uHasNormalMap;
 uniform bool uHasShadowMap;
 uniform bool uHasEnvironmentMap;
+uniform bool uHasDisplacementMap;
 
 uniform mat4 uMVPMatrix;
 uniform mat4 uViewMatrix;
@@ -42,6 +43,8 @@ uniform mat4 uNormalMatrix;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform mat4 uLightSpaceMatrix;
+
+uniform sampler2D uDisplacementMap;
 
 const float gradient = 1.85;
 const float destinity = 3.0 / 1e3;
@@ -67,6 +70,16 @@ void main(void) {
   // shadow
   if (uHasShadowMap) {
     vVertexLightPosition = uLightSpaceMatrix * worldPosition;
+  }
+  if (uHasDisplacementMap) {
+    float displacementBias = -0.25;
+    float displacementScale = 0.5;
+    vec3 dv = texture(uDisplacementMap, texCoords).xyz;
+    float df = displacementScale * dv.x + displacementBias;
+    vec3 displacedPosition = aVertexNormal * df + aVertexPosition.xyz;
+    vec4 displaced = vec4(displacedPosition, 1.0);
+    worldPosition = uModelMatrix * displaced;
+    vertexPosition = uMVPMatrix * displaced;
   }
   // occlusion
   {

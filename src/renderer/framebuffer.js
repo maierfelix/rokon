@@ -118,8 +118,33 @@ FrameBuffer.prototype.isDepthComponent = function(comp) {
     (comp === gl.DEPTH_COMPONENT) ||
     (comp === gl.DEPTH_COMPONENT16) ||
     (comp === gl.DEPTH_COMPONENT24) ||
-    (comp === gl.DEPTH_COMPONENT32F)
+    (comp === gl.DEPTH_COMPONENT32F) ||
+    (this.isDepthStencilComponent(comp))
   );
+};
+
+/**
+ * Indicates if it's a depth-stencil component
+ * @param {Number} comp
+ * @return {Boolean}
+ */
+FrameBuffer.prototype.isDepthStencilComponent = function(comp) {
+  let gl = this.gl;
+  return (
+    (comp === gl.DEPTH24_STENCIL8) ||
+    (comp === gl.DEPTH32F_STENCIL8)
+  );
+};
+
+/**
+ * Returns the given unsized format of a format
+ * @param {Number} comp
+ * @return {Number}
+ */
+FrameBuffer.prototype.getUnsizedDepthFormat = function(format) {
+  let gl = this.gl;
+  if (this.isDepthStencilComponent(format)) return gl.DEPTH_STENCIL;
+  return gl.DEPTH_COMPONENT;
 };
 
 /**
@@ -219,13 +244,33 @@ FrameBuffer.prototype.isDepthAttachment = function(attachment) {
 FrameBuffer.prototype.createBuffer = function(attachments) {
   let gl = this.gl;
   let buffer = gl.createFramebuffer();
-  let attachmentList = this.getAttachmentList(attachments);
+  let {
+    colorAttachments,
+    depthAttachments
+  } = this.getAttachmentList(attachments);
   gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+  // empty fbo, what's wrong with u?
+  if (
+    (colorAttachments.length <= 0) &&
+    (depthAttachments.length <= 0)
+  ) {
+    console.warn(`Expected at least one color or depth attachment!`);
+  }
   // if this fbo is depth-only then we don't need a draw buffer
-  if (this.isDepthComponent(attachmentList[0])) gl.drawBuffers([gl.NONE]);
-  // we have an fbo with color attachments, set them as draw buffers
-  else gl.drawBuffers(attachmentList);
-  this.attachmentList = attachmentList;
+  if (
+    (colorAttachments.length <= 0) &&
+    (depthAttachments.length > 0)
+  ) gl.drawBuffers([gl.NONE]);
+  // do we have a combination of color and depth attachments?
+  else if (
+    (colorAttachments.length > 0) &&
+    (depthAttachments.length > 0)
+  ) {
+    gl.drawBuffers(colorAttachments);
+  }
+  // we have an fbo with color attachments only
+  else gl.drawBuffers(colorAttachments);
+  this.attachmentList = { colorAttachments, depthAttachments };
   return buffer;
 };
 
@@ -235,15 +280,16 @@ FrameBuffer.prototype.createBuffer = function(attachments) {
  * @return {Array}
  */
 FrameBuffer.prototype.getAttachmentList = function(attachments) {
-  let attachmentList = [];
+  let colorAttachments = [];
+  let depthAttachments = [];
   if (attachments === null) {
     let id = this.getColorAttachementUnitById(0);
-    attachmentList.push(id);
+    colorAttachments.push(id);
   }
   else if (attachments > 0) {
     for (let ii = 0; ii < attachments; ++ii) {
       let id = this.getColorAttachementUnitById(ii);
-      attachmentList.push(id);
+      colorAttachments.push(id);
     };
   }
   else if (Array.isArray(attachments)) {
@@ -252,13 +298,13 @@ FrameBuffer.prototype.getAttachmentList = function(attachments) {
       let format = attachment.format;
       if (this.isColorComponent(format)) {
         let id = this.getColorAttachementUnitById(ii);
-        attachmentList.push(id);
+        colorAttachments.push(id);
       } else if (this.isDepthComponent(format)) {
-        attachmentList.push(format);
+        depthAttachments.push(format);
       }
     };
   }
-  return attachmentList;
+  return { colorAttachments, depthAttachments };
 };
 
 /**
@@ -273,12 +319,13 @@ FrameBuffer.prototype.createTexture = function(opts) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
   if (opts !== null) {
     if (this.isDepthComponent(opts.format)) {
+      let unsizedFormat = this.getUnsizedDepthFormat(opts.format);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap.s);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap.t);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, wrap.r);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texImage2D(gl.TEXTURE_2D, 0, opts.format, this.width, this.height, 0, gl.DEPTH_COMPONENT, opts.size || gl.FLOAT, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, opts.format, this.width, this.height, 0, unsizedFormat, opts.size || gl.FLOAT, null);
     } else {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap.s);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap.t);

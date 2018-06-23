@@ -58,7 +58,7 @@ WebGLFilter.prototype.init = function() {
  * Enables the filter's fbo
  * @param {Boolean} clear - Clear the fbo's content
  */
-WebGLFilter.prototype.enable = function(clear = false) {
+WebGLFilter.prototype.enable = function(clear = true) {
   let gl = this.gl;
   let renderer = this.renderer;
   renderer.useFrameBuffer(this.input.texture);
@@ -98,7 +98,7 @@ WebGLFilter.prototype.useProgram = function(name) {
 WebGLFilter.prototype.apply = function() {
   let renderer = this.renderer;
   let program = renderer.currentProgram;
-  if (program) {
+  if (program !== null) {
     let variables = program.locations;
     renderer.useTexture(this.input.texture, variables.uSampler, 0);
   }

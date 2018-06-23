@@ -72,6 +72,7 @@ export default class WebGLObject {
       this.emissiveTexture = null;
       this.metalnessTexture = null;
       this.roughnessTexture = null;
+      this.displacementTexture = null;
       this.ambientOcclusionTexture = null;
       this.environmentTexture = null;
     }
@@ -157,7 +158,7 @@ WebGLObject.prototype.createReflector = function() {
       "data", "loader", "buffers",
       "texture", "normalTexture", "specularTexture",
       "emissiveTexture", "metalnessTexture", "roughnessTexture",
-      "ambientOcclusionTexture", "environmentTexture"
+      "ambientOcclusionTexture", "environmentTexture", "displacementTexture"
     ]
   });
 };
@@ -257,6 +258,14 @@ WebGLObject.prototype.useRoughnessMap = function(texture) {
  */
 WebGLObject.prototype.useRSMMap = function(texture) {
   this.rsmTexture = texture;
+};
+
+/**
+ * Uses the given displacement texture
+ * @param {WebGLObjectTexture} texture
+ */
+WebGLObject.prototype.useDisplacementMap = function(texture) {
+  this.displacementTexture = texture;
 };
 
 /**

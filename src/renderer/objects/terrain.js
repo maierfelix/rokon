@@ -115,9 +115,8 @@ Terrain.prototype.calculateNormal = function(x, y, heights) {
   let d = heights[clamp(((y - 1) * VERTEX_COUNT) + x, 0, length)];
   let u = heights[clamp(((y + 1) * VERTEX_COUNT) + x, 0, length)];
   let norm = vec3.create();
-  vec3.set(norm, (l - r), 1.0, (d - u));
+  vec3.set(norm, (l - r), -10, (d - u));
   vec3.normalize(norm, norm);
-  norm[1] *= -1;
   return norm;
 };
 

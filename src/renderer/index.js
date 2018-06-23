@@ -63,7 +63,7 @@ export default class WebGLRenderer {
     this.programs = {};
     this.extensions = {};
     this.debug = {
-      glow: true,
+      glow: false,
       FXAA: true,
       normals: false,
       boundings: false,
@@ -147,7 +147,8 @@ WebGLRenderer.prototype.createGBuffer = function() {
       { format: gl.RGBA16F },
       { format: gl.RGBA16F },
       { format: gl.RGBA16F },
-      { format: gl.RGBA16F }
+      { format: gl.RGBA16F },
+      { format: gl.DEPTH24_STENCIL8, size: gl.UNSIGNED_INT_24_8 }
     ]
   });
   return buffer;
@@ -551,7 +552,6 @@ WebGLRenderer.prototype.getRendererProgramByPath = function(name) {
  * @param {String} name 
  */
 WebGLRenderer.prototype.reloadRendererProgram = function(name) {
-  console.log(name);
   let program = this.getRendererProgramByPath(name);
   if (program !== null) program.reload();
 };
